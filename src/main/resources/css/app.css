@@ -1,0 +1,162 @@
+/* ===== Metrkansh ERP - global theme ===== */
+
+.root {
+    -fx-font-family: "Segoe UI", "Inter", "Helvetica Neue", Arial, sans-serif;
+    -fx-font-size: 13px;
+    -fx-background-color: #f4f6fb;
+    -fx-text-fill: #0f172a;
+
+    sidebar-bg:     #1a2332;
+    sidebar-hover:  #243049;
+    sidebar-active: #3b82f6;
+    primary:        #3b82f6;
+    primary-dark:   #2563eb;
+    success:        #16a34a;
+    warning:        #f59e0b;
+    danger:         #dc2626;
+    muted:          #64748b;
+    card-bg:        #ffffff;
+    border:         #e2e8f0;
+}
+
+/* ---------- Login ---------- */
+.login-backdrop {
+    -fx-background-color: linear-gradient(to bottom right, #0f172a, #1e293b);
+}
+.login-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-padding: 32 40 32 40;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 24, 0.2, 0, 6);
+    -fx-spacing: 14;
+    -fx-min-width: 380;
+}
+.login-card .brand-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0f172a;
+}
+.login-card .brand-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: muted;
+}
+.login-card .welcome {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+.login-card .welcome-sub {
+    -fx-text-fill: muted;
+    -fx-font-size: 12px;
+}
+.login-card .text-field,
+.login-card .password-field,
+.login-card .combo-box {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 8;
+    -fx-border-color: border;
+    -fx-border-radius: 8;
+    -fx-padding: 10 12 10 12;
+}
+
+/* ---------- Buttons ---------- */
+.btn-primary {
+    -fx-background-color: primary;
+    -fx-text-fill: white;
+    -fx-background-radius: 8;
+    -fx-padding: 10 18 10 18;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+.btn-primary:hover { -fx-background-color: primary-dark; }
+
+.btn-secondary {
+    -fx-background-color: white;
+    -fx-text-fill: #0f172a;
+    -fx-background-radius: 8;
+    -fx-border-color: border;
+    -fx-border-radius: 8;
+    -fx-padding: 8 14 8 14;
+    -fx-cursor: hand;
+}
+.btn-secondary:hover { -fx-background-color: #f1f5f9; }
+
+.btn-danger {
+    -fx-background-color: danger;
+    -fx-text-fill: white;
+    -fx-background-radius: 6;
+    -fx-padding: 4 10 4 10;
+    -fx-cursor: hand;
+}
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+    -fx-background-color: sidebar-bg;
+    -fx-min-width: 220;
+    -fx-pref-width: 220;
+    -fx-padding: 18 0 18 0;
+}
+.sidebar .brand-box { -fx-padding: 6 18 22 18; -fx-spacing: 6; }
+.sidebar .brand-title  { -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 15px; }
+.sidebar .brand-sub    { -fx-text-fill: #94a3b8; -fx-font-size: 10px; }
+
+.sidebar .nav-item {
+    -fx-background-color: transparent;
+    -fx-text-fill: #cbd5e1;
+    -fx-alignment: center-left;
+    -fx-padding: 11 22 11 22;
+    -fx-cursor: hand;
+    -fx-font-size: 13px;
+    -fx-max-width: infinity;
+    -fx-background-radius: 0;
+}
+.sidebar .nav-item:hover { -fx-background-color: sidebar-hover; -fx-text-fill: white; }
+.sidebar .nav-item.active {
+    -fx-background-color: sidebar-active;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+/* ---------- Content ---------- */
+.content-area { -fx-padding: 22 28 22 28; }
+.page-title { -fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #0f172a; }
+.section-title { -fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #0f172a; }
+
+.card {
+    -fx-background-color: card-bg;
+    -fx-background-radius: 10;
+    -fx-padding: 16;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.06), 8, 0, 0, 2);
+}
+
+/* Stat card variants */
+.stat-card { -fx-background-radius: 10; -fx-padding: 16; -fx-min-height: 100; }
+.stat-card .stat-label { -fx-font-size: 12px; -fx-text-fill: #334155; -fx-font-weight: bold; }
+.stat-card .stat-value { -fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #0f172a; }
+.stat-card .stat-delta { -fx-font-size: 11px; -fx-text-fill: muted; }
+
+.stat-blue   { -fx-background-color: #dbeafe; }
+.stat-green  { -fx-background-color: #dcfce7; }
+.stat-yellow { -fx-background-color: #fef9c3; }
+.stat-red    { -fx-background-color: #fee2e2; }
+
+/* Tables */
+.table-view { -fx-background-color: card-bg; -fx-background-radius: 8; }
+.table-view .column-header-background { -fx-background-color: #f8fafc; }
+.table-view .column-header { -fx-padding: 10; -fx-border-color: transparent transparent border transparent; }
+.table-view .column-header .label { -fx-font-weight: bold; -fx-text-fill: #334155; }
+.table-row-cell:selected { -fx-background-color: #dbeafe; -fx-text-fill: #0f172a; }
+
+/* Chart */
+.chart-plot-background { -fx-background-color: white; }
+.sales-chart .default-color0.chart-series-line { -fx-stroke: primary; -fx-stroke-width: 2.5; }
+.sales-chart .default-color0.chart-line-symbol { -fx-background-color: primary, white; }
+
+/* Misc */
+.search-field {
+    -fx-background-color: #f1f5f9;
+    -fx-background-radius: 6;
+    -fx-padding: 6 12 6 12;
+    -fx-border-color: transparent;
+}
+.error-label { -fx-text-fill: danger; -fx-font-size: 12px; }
+.muted { -fx-text-fill: muted; }
