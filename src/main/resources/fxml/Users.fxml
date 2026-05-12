@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<HBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.matraknhash.ui.controller.UsersController"
+      spacing="18">
+
+    <VBox styleClass="card" minWidth="280" prefWidth="300" spacing="10">
+        <Label text="Add New User" styleClass="section-title"/>
+        <Label text="Username"/><TextField fx:id="usernameField"/>
+        <Label text="Full name"/><TextField fx:id="fullNameField"/>
+        <Label text="Password"/><PasswordField fx:id="passwordField"/>
+        <Label text="Role"/>
+        <ComboBox fx:id="roleCombo" prefWidth="280"/>
+        <Label fx:id="formError" styleClass="error-label" managed="false" visible="false"/>
+        <HBox spacing="8">
+            <padding><Insets top="6"/></padding>
+            <Button text="Clear" styleClass="btn-secondary" onAction="#onClear"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Save" styleClass="btn-primary" onAction="#onSave"/>
+        </HBox>
+    </VBox>
+
+    <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="10">
+        <Label text="All Users" styleClass="section-title"/>
+        <TableView fx:id="table" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colId"    text="ID"       prefWidth="50"/>
+                <TableColumn fx:id="colUser"  text="Username" prefWidth="140"/>
+                <TableColumn fx:id="colName"  text="Name"     prefWidth="200"/>
+                <TableColumn fx:id="colRole"  text="Role"     prefWidth="110"/>
+                <TableColumn fx:id="colState" text="Status"   prefWidth="80"/>
+                <TableColumn fx:id="colAct"   text="Actions"  prefWidth="140"/>
+            </columns>
+        </TableView>
+    </VBox>
+</HBox>
