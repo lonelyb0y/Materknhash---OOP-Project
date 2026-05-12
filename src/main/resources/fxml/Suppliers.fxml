@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<HBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.matraknhash.ui.controller.SuppliersController"
+      spacing="18">
+
+    <VBox styleClass="card" minWidth="280" prefWidth="300" spacing="10">
+        <Label text="Add Supplier" styleClass="section-title"/>
+        <Label text="Name"/><TextField fx:id="nameField"/>
+        <Label text="Phone"/><TextField fx:id="phoneField"/>
+        <Label text="Email"/><TextField fx:id="emailField"/>
+        <Label text="Address"/><TextField fx:id="addressField"/>
+        <Label fx:id="formError" styleClass="error-label" managed="false" visible="false"/>
+        <HBox spacing="8">
+            <padding><Insets top="6"/></padding>
+            <Button text="Clear" styleClass="btn-secondary" onAction="#onClear"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Save" styleClass="btn-primary" onAction="#onSave"/>
+        </HBox>
+    </VBox>
+
+    <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="10">
+        <Label text="All Suppliers" styleClass="section-title"/>
+        <TableView fx:id="table" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colId"      text="ID"      prefWidth="50"/>
+                <TableColumn fx:id="colName"    text="Name"    prefWidth="180"/>
+                <TableColumn fx:id="colPhone"   text="Phone"   prefWidth="130"/>
+                <TableColumn fx:id="colEmail"   text="Email"   prefWidth="180"/>
+                <TableColumn fx:id="colAddress" text="Address" prefWidth="180"/>
+                <TableColumn fx:id="colAct"     text="Actions" prefWidth="100"/>
+            </columns>
+        </TableView>
+    </VBox>
+</HBox>
