@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.StackPane?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.matraknhash.ui.controller.DashboardController"
+      spacing="18">
+
+    <HBox spacing="14">
+        <VBox styleClass="stat-card,stat-blue" HBox.hgrow="ALWAYS">
+            <Label text="Total Sales (30d)" styleClass="stat-label"/>
+            <Label fx:id="lblSales" text="0 EGP" styleClass="stat-value"/>
+            <Label text="Updated live"        styleClass="stat-delta"/>
+        </VBox>
+        <VBox styleClass="stat-card,stat-green" HBox.hgrow="ALWAYS">
+            <Label text="Total Profit (30d)" styleClass="stat-label"/>
+            <Label fx:id="lblProfit" text="0 EGP" styleClass="stat-value"/>
+            <Label text="Sale price - cost"   styleClass="stat-delta"/>
+        </VBox>
+        <VBox styleClass="stat-card,stat-yellow" HBox.hgrow="ALWAYS">
+            <Label text="Total Parts"         styleClass="stat-label"/>
+            <Label fx:id="lblParts" text="0" styleClass="stat-value"/>
+            <Label text="Distinct SKUs"       styleClass="stat-delta"/>
+        </VBox>
+        <VBox styleClass="stat-card,stat-red" HBox.hgrow="ALWAYS">
+            <Label text="Low Stock Alerts"    styleClass="stat-label"/>
+            <Label fx:id="lblLow" text="0" styleClass="stat-value"/>
+            <Label text="Items low in stock"  styleClass="stat-delta"/>
+        </VBox>
+    </HBox>
+
+    <HBox spacing="18">
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" minWidth="640">
+            <Label text="Sales Overview (Last 30 Days)" styleClass="section-title"/>
+            <StackPane fx:id="chartHolder" prefHeight="320"/>
+        </VBox>
+
+        <VBox styleClass="card" minWidth="320" maxWidth="380">
+            <Label text="Low Stock Alerts" styleClass="section-title"/>
+            <padding><Insets top="6"/></padding>
+            <ListView fx:id="lowStockList" prefHeight="320"/>
+        </VBox>
+    </HBox>
+
+</VBox>
