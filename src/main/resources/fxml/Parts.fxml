@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<HBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.matraknhash.ui.controller.PartsController"
+      spacing="18">
+
+    <!-- Left: add/edit form -->
+    <VBox styleClass="card" minWidth="280" prefWidth="300" spacing="10">
+        <Label text="Add / Edit Part" styleClass="section-title"/>
+        <Label text="SKU"/>
+        <TextField fx:id="skuField" promptText="P-1001"/>
+        <Label text="Name"/>
+        <TextField fx:id="nameField" promptText="Oil Filter"/>
+        <Label text="Category"/>
+        <TextField fx:id="categoryField" promptText="Filters"/>
+        <Label text="Car make / model"/>
+        <HBox spacing="6">
+            <TextField fx:id="makeField"  promptText="Toyota" HBox.hgrow="ALWAYS"/>
+            <TextField fx:id="modelField" promptText="Corolla" HBox.hgrow="ALWAYS"/>
+        </HBox>
+        <Label text="Supplier"/>
+        <ComboBox fx:id="supplierCombo" prefWidth="280"/>
+        <Label text="Cost / Sell price"/>
+        <HBox spacing="6">
+            <TextField fx:id="costField" promptText="Cost"  HBox.hgrow="ALWAYS"/>
+            <TextField fx:id="priceField" promptText="Sell" HBox.hgrow="ALWAYS"/>
+        </HBox>
+        <Label text="Quantity / Min"/>
+        <HBox spacing="6">
+            <TextField fx:id="qtyField" promptText="Qty"     HBox.hgrow="ALWAYS"/>
+            <TextField fx:id="minField" promptText="Min qty" HBox.hgrow="ALWAYS"/>
+        </HBox>
+
+        <Label fx:id="formError" styleClass="error-label" managed="false" visible="false"/>
+
+        <HBox spacing="8">
+            <padding><Insets top="6"/></padding>
+            <Button text="Clear" styleClass="btn-secondary" onAction="#onClear"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Save" styleClass="btn-primary" onAction="#onSave"/>
+        </HBox>
+    </VBox>
+
+    <!-- Right: table -->
+    <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="10">
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="All Spare Parts" styleClass="section-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <TextField fx:id="searchField" promptText="Search by name or SKU" prefWidth="260" styleClass="search-field"/>
+            <Button text="+ Add New" styleClass="btn-primary" onAction="#onClear"/>
+        </HBox>
+        <TableView fx:id="table" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colId"    text="ID" prefWidth="50"/>
+                <TableColumn fx:id="colSku"   text="SKU" prefWidth="90"/>
+                <TableColumn fx:id="colName"  text="Name" prefWidth="200"/>
+                <TableColumn fx:id="colCat"   text="Category" prefWidth="110"/>
+                <TableColumn fx:id="colQty"   text="Qty" prefWidth="60"/>
+                <TableColumn fx:id="colPrice" text="Price (EGP)" prefWidth="100"/>
+                <TableColumn fx:id="colAct"   text="Actions" prefWidth="120"/>
+            </columns>
+        </TableView>
+    </VBox>
+</HBox>
