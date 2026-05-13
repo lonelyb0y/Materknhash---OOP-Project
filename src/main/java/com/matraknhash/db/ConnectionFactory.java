@@ -59,6 +59,16 @@ public final class ConnectionFactory {
 
     public static String dbPath() { return jdbcUrl; }
 
+    /**
+     * Returns a FRESH dedicated connection. Caller MUST close it (try-with-resources).
+     * Use this for any code path that runs a multi-statement transaction (setAutoCommit(false))
+     * or that runs on a worker thread; the shared {@link #get()} connection is not safe to share
+     * across threads when transactions are in flight.
+     */
+    public static Connection borrow() throws SQLException {
+        return DriverManager.getConnection(jdbcUrl, user, password);
+    }
+
     // ---------------- helpers ----------------
 
     private static Properties loadProps() {
