@@ -1,6 +1,14 @@
 package com.matraknhash.model;
 
 public class Part {
+
+    /**
+     * A listing's lifecycle on the marketplace. Seeded parts are LIVE.
+     * A new seller listing flows DRAFT → PENDING_EMPLOYEE → PENDING_ADMIN → LIVE.
+     * REJECTED or HIDDEN listings don't appear in the customer catalog.
+     */
+    public enum ListingStatus { DRAFT, PENDING_EMPLOYEE, PENDING_ADMIN, LIVE, REJECTED, HIDDEN }
+
     private int id;
     private String sku;
     private String name;
@@ -12,6 +20,12 @@ public class Part {
     private int quantity;
     private int minQty;
     private Integer supplierId;
+    // --- marketplace fields (M1) ---
+    private Integer sellerId;
+    private ListingStatus listingStatus = ListingStatus.LIVE;
+    private String listingReason;
+    private Integer employeeReviewerId;
+    private Integer adminReviewerId;
 
     public Part() {}
 
@@ -26,6 +40,11 @@ public class Part {
     public int getQuantity() { return quantity; }
     public int getMinQty() { return minQty; }
     public Integer getSupplierId() { return supplierId; }
+    public Integer getSellerId() { return sellerId; }
+    public ListingStatus getListingStatus() { return listingStatus; }
+    public String getListingReason() { return listingReason; }
+    public Integer getEmployeeReviewerId() { return employeeReviewerId; }
+    public Integer getAdminReviewerId() { return adminReviewerId; }
 
     public void setId(int id) { this.id = id; }
     public void setSku(String sku) { this.sku = sku; }
@@ -38,6 +57,11 @@ public class Part {
     public void setQuantity(int quantity) { this.quantity = quantity; }
     public void setMinQty(int minQty) { this.minQty = minQty; }
     public void setSupplierId(Integer supplierId) { this.supplierId = supplierId; }
+    public void setSellerId(Integer sellerId) { this.sellerId = sellerId; }
+    public void setListingStatus(ListingStatus listingStatus) { this.listingStatus = listingStatus; }
+    public void setListingReason(String listingReason) { this.listingReason = listingReason; }
+    public void setEmployeeReviewerId(Integer id) { this.employeeReviewerId = id; }
+    public void setAdminReviewerId(Integer id) { this.adminReviewerId = id; }
 
     public boolean isLowStock() { return quantity <= minQty; }
 

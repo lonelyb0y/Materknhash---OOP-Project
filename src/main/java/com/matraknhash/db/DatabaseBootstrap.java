@@ -63,16 +63,30 @@ public final class DatabaseBootstrap {
         }
     }
 
-    /** True for idempotent-safe "already exists" errors on CREATE INDEX / ALTER TABLE re-runs. */
+    /**
+     * True for idempotent-safe errors on schema-evolution statements (CREATE INDEX,
+     * ALTER TABLE ADD/DROP COLUMN/CONSTRAINT/CHECK) when the migration block runs
+     * a second time. These should be ignored so the bootstrap is a no-op on warm DBs.
+     */
     private static boolean isAlreadyExists(SQLException e, String stmt) {
         String m = String.valueOf(e.getMessage()).toLowerCase();
         String s = stmt.toLowerCase();
-        boolean indexDup = (s.startsWith("create index") || s.startsWith("create unique index"))
-                && (m.contains("duplicate key name") || m.contains("already exists"));
-        // ALTER TABLE ... ADD COLUMN run twice -> "Duplicate column name"
-        boolean alterDup = s.startsWith("alter table")
-                && (m.contains("duplicate column") || m.contains("already exists"));
-        return indexDup || alterDup;
+
+        if (s.startsWith("create index") || s.startsWith("create unique index")) {
+            return m.contains("duplicate key name") || m.contains("already exists");
+        }
+        if (s.startsWith("alter table")) {
+            // ADD COLUMN re-run
+            if (m.contains("duplicate column")) return true;
+            // ADD CONSTRAINT / ADD FOREIGN KEY re-run
+            if (m.contains("duplicate foreign key") || m.contains("already exists")
+                    || m.contains("duplicate key on write or update")) return true;
+            // DROP CHECK / DROP CONSTRAINT when it was never there (fresh DB) or already removed
+            if (m.contains("check constraint") && m.contains("does not exist")) return true;
+            if (m.contains("doesn't exist") || m.contains("doesn t exist")
+                    || m.contains("check") && m.contains("not found")) return true;
+        }
+        return false;
     }
 
     /** Strip SQL line-comments so our naive split-on-';' doesn't mis-classify chunks. */

@@ -102,3 +102,61 @@ CREATE INDEX idx_sales_status     ON sales(status);
 CREATE INDEX idx_sales_status_ts  ON sales(status, created_at);
 CREATE INDEX idx_sale_items_sale  ON sale_items(sale_id);
 CREATE INDEX idx_sale_items_part  ON sale_items(part_id);
+
+-- =====================================================================
+-- MARKETPLACE MIGRATION (M1)
+-- Pivot the app from internal POS to a multi-tenant marketplace:
+--   * users gains a CUSTOMER role + a status (PENDING_APPROVAL / ACTIVE / SUSPENDED)
+--   * parts becomes "listings" owned by a seller, with their own approval pipeline
+--   * sales becomes "orders" that can be PLACED by customers, SELLER_ACKed,
+--     APPROVED by admin, then optionally RETURN_REQUESTED -> RETURNED.
+-- Every ALTER below is idempotent (DatabaseBootstrap tolerates duplicate /
+-- already-exists / not-found errors) so this block re-runs cleanly.
+-- =====================================================================
+
+-- The role check stops us from inserting CUSTOMER; widen the column instead.
+ALTER TABLE users DROP CHECK chk_users_role;
+
+ALTER TABLE users ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE';
+-- Anyone in the table when we migrate is treated as fully active.
+UPDATE users SET status='ACTIVE' WHERE status IS NULL OR status='';
+
+-- Parts become listings -- they have an owner (seller) and their own approval state.
+ALTER TABLE parts ADD COLUMN seller_id            INT          NULL;
+ALTER TABLE parts ADD COLUMN listing_status       VARCHAR(20)  NOT NULL DEFAULT 'LIVE';
+ALTER TABLE parts ADD COLUMN listing_reason       VARCHAR(255) NULL;
+ALTER TABLE parts ADD COLUMN employee_reviewer_id INT          NULL;
+ALTER TABLE parts ADD COLUMN admin_reviewer_id    INT          NULL;
+ALTER TABLE parts ADD CONSTRAINT fk_parts_seller          FOREIGN KEY (seller_id)            REFERENCES users(id);
+ALTER TABLE parts ADD CONSTRAINT fk_parts_employee_review FOREIGN KEY (employee_reviewer_id) REFERENCES users(id);
+ALTER TABLE parts ADD CONSTRAINT fk_parts_admin_review    FOREIGN KEY (admin_reviewer_id)    REFERENCES users(id);
+-- All seed parts get owned by the default seller (id=3) and stay LIVE.
+UPDATE parts SET seller_id = 3      WHERE seller_id IS NULL;
+UPDATE parts SET listing_status='LIVE' WHERE listing_status IS NULL OR listing_status='';
+
+-- Sales become orders. Drop the narrow status check so we can store the
+-- expanded state machine, and add the columns the new flow needs.
+ALTER TABLE sales DROP CHECK chk_sales_status;
+ALTER TABLE sales ADD COLUMN buyer_id            INT          NULL;
+ALTER TABLE sales ADD COLUMN seller_ack_at       DATETIME     NULL;
+ALTER TABLE sales ADD COLUMN return_reason       VARCHAR(255) NULL;
+ALTER TABLE sales ADD COLUMN return_requested_at DATETIME     NULL;
+ALTER TABLE sales ADD COLUMN return_approved_at  DATETIME     NULL;
+ALTER TABLE sales ADD CONSTRAINT fk_sales_buyer FOREIGN KEY (buyer_id) REFERENCES users(id);
+
+-- In-app notification inbox for sellers/customers/admins.
+CREATE TABLE IF NOT EXISTS notifications (
+    id          BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    user_id     INT          NOT NULL,
+    kind        VARCHAR(40)  NOT NULL,                 -- e.g. ORDER_PLACED, LISTING_APPROVED
+    body        VARCHAR(500) NOT NULL,
+    link_target VARCHAR(120) NULL,                     -- e.g. "sale:42" or "listing:7"
+    is_read     TINYINT      NOT NULL DEFAULT 0,
+    created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_notif_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX idx_parts_seller   ON parts(seller_id);
+CREATE INDEX idx_parts_listing  ON parts(listing_status);
+CREATE INDEX idx_sales_buyer    ON sales(buyer_id);
+CREATE INDEX idx_notif_unread   ON notifications(user_id, is_read, created_at);
