@@ -112,9 +112,8 @@ public class SalesController {
             InvoiceMessage reply = client.send(sale);
             switch (reply.getType()) {
                 case INVOICE_ACK -> {
-                    showStatus("Saved over socket: " + reply.getInfo());
-                    // refresh available parts (stock changed)
-                    partCombo.setItems(FXCollections.observableArrayList(ctx.partService.all()));
+                    // Stock won't change yet — invoice is PENDING until an admin/employee approves.
+                    showStatus("Submitted (#" + reply.getInfo() + ") — waiting for approval.");
                     items.clear();
                     lblInvNo.setText("INV-" + (ctx.saleService.countAll() + 1));
                 }

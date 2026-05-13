@@ -21,7 +21,7 @@ public class MainShellController {
     @FXML private Label userLabel;
     @FXML private Label roleLabel;
 
-    @FXML private Button navDashboard, navParts, navSales, navPurchases,
+    @FXML private Button navDashboard, navParts, navSales, navPending, navPurchases,
             navSuppliers, navReports, navUsers, navSettings;
 
     private final List<Button> navItems = java.util.List.of();
@@ -40,11 +40,13 @@ public class MainShellController {
     }
 
     private void applyRoleVisibility(Role role) {
-        // Sellers only see Dashboard + Sales
+        // Sellers only see Dashboard + Sales (their own POS).
+        // Admin + Employee handle everything else — including approving invoices.
         boolean isSeller = role == Role.SELLER;
         boolean isAdmin  = role == Role.ADMIN;
 
         toggle(navParts,     !isSeller);
+        toggle(navPending,   !isSeller);   // approval queue: ADMIN + EMPLOYEE
         toggle(navPurchases, !isSeller);
         toggle(navSuppliers, !isSeller);
         toggle(navReports,   !isSeller);
@@ -60,6 +62,7 @@ public class MainShellController {
     @FXML private void showDashboard() { swap("Dashboard.fxml", "Dashboard", navDashboard); }
     @FXML private void showParts()     { swap("Parts.fxml",     "Spare Parts", navParts); }
     @FXML private void showSales()     { swap("Sales.fxml",     "Sales (New Invoice)", navSales); }
+    @FXML private void showPending()   { swap("PendingInvoices.fxml", "Pending Invoices", navPending); }
     @FXML private void showPurchases() { swap("Purchases.fxml", "Purchases", navPurchases); }
     @FXML private void showSuppliers() { swap("Suppliers.fxml", "Suppliers", navSuppliers); }
     @FXML private void showReports()   { swap("Reports.fxml",   "Reports & Analytics", navReports); }
