@@ -10,3 +10,6 @@ target/
 .classpath
 .DS_Store
 database/*.db-journal
+
+# Database credentials - never commit. Use application.properties.example as the template.
+src/main/resources/application.properties

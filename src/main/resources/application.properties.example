@@ -1,0 +1,25 @@
+# =====================================================================
+# Metrkansh ERP - database connection template
+# =====================================================================
+# Copy this file to "application.properties" in the same folder, fill in
+# the values your hosting provider gave you, and never commit the real
+# file (it's listed in .gitignore).
+#
+# Currently the team is hosting on Railway.app -> Provision MySQL.
+#  - Click the MySQL service -> "Variables" tab -> copy each value.
+#  - Public proxy uses plain TCP (no TLS).
+#
+# To migrate to a different host (Aiven, TiDB, Supabase, etc.) just
+# change the host/port/credentials below; if the host requires TLS,
+# flip db.tls=true.
+# =====================================================================
+
+db.host=YOUR_HOST_HERE
+db.port=3306
+db.name=railway
+db.user=root
+db.password=YOUR_PASSWORD_HERE
+
+# Flip to "true" only if your provider mandates TLS (e.g. TiDB Cloud,
+# Aiven). Railway's public proxy does NOT use TLS.
+db.tls=false
