@@ -38,12 +38,28 @@ CREATE TABLE IF NOT EXISTS parts (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS sales (
-    id         INT           NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    seller_id  INT           NOT NULL,
-    total      DECIMAL(12,2) NOT NULL,
-    created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_sales_seller FOREIGN KEY (seller_id) REFERENCES users(id)
+    id            INT           NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    seller_id     INT           NOT NULL,
+    total         DECIMAL(12,2) NOT NULL,
+    status        VARCHAR(16)   NOT NULL DEFAULT 'PENDING',
+    approver_id   INT           NULL,
+    approved_at   DATETIME      NULL,
+    reject_reason VARCHAR(255)  NULL,
+    created_at    DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_sales_seller   FOREIGN KEY (seller_id)   REFERENCES users(id),
+    CONSTRAINT fk_sales_approver FOREIGN KEY (approver_id) REFERENCES users(id),
+    CONSTRAINT chk_sales_status CHECK (status IN ('PENDING','APPROVED','REJECTED'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- For databases created BEFORE the approval workflow existed, add the new columns.
+-- These ALTERs are tolerated as no-ops on fresh installs (DatabaseBootstrap ignores
+-- "duplicate column" errors).
+ALTER TABLE sales ADD COLUMN status        VARCHAR(16)  NOT NULL DEFAULT 'PENDING';
+ALTER TABLE sales ADD COLUMN approver_id   INT          NULL;
+ALTER TABLE sales ADD COLUMN approved_at   DATETIME     NULL;
+ALTER TABLE sales ADD COLUMN reject_reason VARCHAR(255) NULL;
+-- Treat any pre-existing rows as already-approved (so historical reports keep working).
+UPDATE sales SET status='APPROVED' WHERE status IS NULL OR status='';
 
 CREATE TABLE IF NOT EXISTS sale_items (
     id         INT           NOT NULL AUTO_INCREMENT PRIMARY KEY,

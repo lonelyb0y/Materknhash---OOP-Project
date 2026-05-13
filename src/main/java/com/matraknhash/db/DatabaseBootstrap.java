@@ -62,12 +62,16 @@ public final class DatabaseBootstrap {
         }
     }
 
-    /** True for idempotent-safe "already exists" errors on CREATE INDEX / INSERT / CREATE TABLE re-runs. */
+    /** True for idempotent-safe "already exists" errors on CREATE INDEX / ALTER TABLE re-runs. */
     private static boolean isAlreadyExists(SQLException e, String stmt) {
         String m = String.valueOf(e.getMessage()).toLowerCase();
         String s = stmt.toLowerCase();
-        return (s.startsWith("create index") || s.startsWith("create unique index"))
+        boolean indexDup = (s.startsWith("create index") || s.startsWith("create unique index"))
                 && (m.contains("duplicate key name") || m.contains("already exists"));
+        // ALTER TABLE ... ADD COLUMN run twice -> "Duplicate column name"
+        boolean alterDup = s.startsWith("alter table")
+                && (m.contains("duplicate column") || m.contains("already exists"));
+        return indexDup || alterDup;
     }
 
     /** Strip SQL line-comments so our naive split-on-';' doesn't mis-classify chunks. */

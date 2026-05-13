@@ -81,6 +81,13 @@ INSERT IGNORE INTO sales(id,seller_id,total,created_at) VALUES
   (29,3,  720.00, DATE_SUB(NOW(), INTERVAL  1 DAY)),
   (30,3,  390.00, NOW());
 
+-- Seeded historical sales pre-date the approval workflow, so flip them to APPROVED
+-- (and credit the seed run to admin id=1) so the reports/charts have data to draw.
+-- INSERT IGNORE above means the columns we add later might still be PENDING on
+-- existing databases. This UPDATE is idempotent.
+UPDATE sales SET status='APPROVED', approver_id=1, approved_at=created_at
+  WHERE id <= 30 AND (status IS NULL OR status='PENDING') AND approver_id IS NULL;
+
 INSERT IGNORE INTO sale_items(sale_id,part_id,quantity,unit_price,subtotal) VALUES
   ( 1, 1, 3,   75.00,  225.00),
   ( 2,10, 1,  360.00,  360.00), ( 2,14, 1,   80.00,   80.00),
