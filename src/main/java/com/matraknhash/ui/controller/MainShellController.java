@@ -12,7 +12,6 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 
 import java.io.IOException;
-import java.util.List;
 
 public class MainShellController {
 
@@ -21,10 +20,19 @@ public class MainShellController {
     @FXML private Label userLabel;
     @FXML private Label roleLabel;
 
-    @FXML private Button navDashboard, navParts, navSales, navPending, navPurchases,
-            navSuppliers, navReports, navUsers, navPendingSellers, navSettings;
+    @FXML private Button navDashboard,
+            // customer
+            navCatalog, navMyOrders, navServices, navMyBookings,
+            // seller
+            navMyListings, navIncoming,
+            // service center
+            navMyOffers, navCenterBookings,
+            // staff
+            navParts, navListingsReview, navServiceReview, navOrdersAdmin,
+            navPurchases, navSuppliers, navReports,
+            // admin
+            navUsers, navPendingSellers, navSettings;
 
-    private final List<Button> navItems = java.util.List.of();
     private Button activeButton;
 
     @FXML
@@ -34,49 +42,99 @@ public class MainShellController {
             userLabel.setText(u.getFullName());
             roleLabel.setText("(" + u.getRole().name() + ")");
             applyRoleVisibility(u.getRole());
+            // Each role lands on the screen most useful to them.
+            switch (u.getRole()) {
+                case CUSTOMER       -> showCatalog();
+                case SELLER         -> showMyListings();
+                case SERVICE_CENTER -> showMyOffers();
+                default             -> showDashboard();
+            }
+        } else {
+            showDashboard();
         }
-        // default screen
-        showDashboard();
     }
 
+    /**
+     * Per-role sidebar visibility. The marketplace pivot collapses things by
+     * role: customers see only the storefront, sellers manage their own
+     * listings + orders, service centers manage offers + bookings, employees
+     * and admins drive the approval pipelines.
+     */
     private void applyRoleVisibility(Role role) {
-        // Customer  -> Dashboard + (future) Catalog + (future) My Orders.
-        // Seller    -> Dashboard + Sales POS + (future) My Listings + My Incoming Orders.
-        // Employee  -> everything operational, no admin-only screens.
-        // Admin     -> everything.
         boolean isCustomer = role == Role.CUSTOMER;
         boolean isSeller   = role == Role.SELLER;
-        boolean isStaff    = role == Role.ADMIN || role == Role.EMPLOYEE;
+        boolean isCenter   = role == Role.SERVICE_CENTER;
+        boolean isEmployee = role == Role.EMPLOYEE;
         boolean isAdmin    = role == Role.ADMIN;
+        boolean isStaff    = isAdmin || isEmployee;
 
-        // Sales POS is staff or seller (sellers still need to submit invoices until
-        // the new marketplace order screens land in M4).
-        toggle(navSales,          !isCustomer);
+        // Dashboard is a back-office KPI screen, only staff need it.
+        toggle(navDashboard,      isStaff);
+
+        // Customer
+        toggle(navCatalog,        isCustomer);
+        toggle(navMyOrders,       isCustomer);
+        toggle(navServices,       isCustomer);
+        toggle(navMyBookings,     isCustomer);
+
+        // Seller
+        toggle(navMyListings,     isSeller);
+        toggle(navIncoming,       isSeller);
+
+        // Service Center
+        toggle(navMyOffers,       isCenter);
+        toggle(navCenterBookings, isCenter);
+
+        // Staff (approval queues + back-office)
         toggle(navParts,          isStaff);
-        toggle(navPending,        isStaff);            // invoice approval queue
+        toggle(navListingsReview, isStaff);
+        toggle(navServiceReview,  isAdmin);
+        toggle(navOrdersAdmin,    isAdmin);
         toggle(navPurchases,      isStaff);
         toggle(navSuppliers,      isStaff);
         toggle(navReports,        isStaff);
+
+        // Admin only
         toggle(navUsers,          isAdmin);
-        toggle(navPendingSellers, isAdmin);            // seller-account approval queue
+        toggle(navPendingSellers, isAdmin);
         toggle(navSettings,       isAdmin);
     }
 
     private void toggle(Button b, boolean show) {
+        if (b == null) return;
         b.setVisible(show);
         b.setManaged(show);
     }
 
-    @FXML private void showDashboard() { swap("Dashboard.fxml", "Dashboard", navDashboard); }
-    @FXML private void showParts()     { swap("Parts.fxml",     "Spare Parts", navParts); }
-    @FXML private void showSales()     { swap("Sales.fxml",     "Sales (New Invoice)", navSales); }
-    @FXML private void showPending()   { swap("PendingInvoices.fxml", "Pending Invoices", navPending); }
-    @FXML private void showPurchases() { swap("Purchases.fxml", "Purchases", navPurchases); }
-    @FXML private void showSuppliers() { swap("Suppliers.fxml", "Suppliers", navSuppliers); }
-    @FXML private void showReports()   { swap("Reports.fxml",   "Reports & Analytics", navReports); }
-    @FXML private void showUsers()          { swap("Users.fxml",          "User Management",   navUsers); }
-    @FXML private void showPendingSellers() { swap("PendingSellers.fxml", "Pending Sellers",   navPendingSellers); }
-    @FXML private void showSettings()       { swap("Settings.fxml",       "Settings",          navSettings); }
+    @FXML private void showDashboard()      { swap("Dashboard.fxml",          "Dashboard",              navDashboard); }
+
+    // Customer
+    @FXML private void showCatalog()        { swap("Catalog.fxml",            "Marketplace",            navCatalog); }
+    @FXML private void showMyOrders()       { swap("MyOrders.fxml",           "My Orders",              navMyOrders); }
+    @FXML private void showServices()       { swap("Services.fxml",           "Service Centers",        navServices); }
+    @FXML private void showMyBookings()     { swap("MyBookings.fxml",         "My Service Bookings",    navMyBookings); }
+
+    // Seller
+    @FXML private void showMyListings()     { swap("MyListings.fxml",         "My Listings",            navMyListings); }
+    @FXML private void showIncoming()       { swap("SellerOrders.fxml",       "Incoming Orders",        navIncoming); }
+
+    // Service Center
+    @FXML private void showMyOffers()       { swap("MyServiceOffers.fxml",    "My Service Offers",      navMyOffers); }
+    @FXML private void showCenterBookings() { swap("CenterBookings.fxml",     "Incoming Bookings",      navCenterBookings); }
+
+    // Staff
+    @FXML private void showParts()          { swap("Parts.fxml",              "Spare Parts",            navParts); }
+    @FXML private void showListingsReview() { swap("ListingReview.fxml",      "Listings Review",        navListingsReview); }
+    @FXML private void showServiceReview()  { swap("ServiceOffersReview.fxml","Service Offers Review",  navServiceReview); }
+    @FXML private void showOrdersAdmin()    { swap("AdminOrders.fxml",        "Approve Orders",         navOrdersAdmin); }
+    @FXML private void showPurchases()      { swap("Purchases.fxml",          "Purchases",              navPurchases); }
+    @FXML private void showSuppliers()      { swap("Suppliers.fxml",          "Suppliers",              navSuppliers); }
+    @FXML private void showReports()        { swap("Reports.fxml",            "Reports & Analytics",    navReports); }
+
+    // Admin
+    @FXML private void showUsers()          { swap("Users.fxml",              "User Management",        navUsers); }
+    @FXML private void showPendingSellers() { swap("PendingSellers.fxml",     "Pending Approvals",      navPendingSellers); }
+    @FXML private void showSettings()       { swap("Settings.fxml",           "Settings",               navSettings); }
 
     @FXML
     private void onLogout() {
@@ -99,7 +157,8 @@ public class MainShellController {
             Throwable root = e;
             while (root.getCause() != null) root = root.getCause();
             new Alert(Alert.AlertType.ERROR,
-                    "Failed to load " + fxml + ":\n" + root.getClass().getSimpleName() + ": " + root.getMessage()).showAndWait();
+                    "Failed to load " + fxml + ":\n" + root.getClass().getSimpleName() + ": " + root.getMessage())
+                    .showAndWait();
         }
     }
 

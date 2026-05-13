@@ -20,16 +20,35 @@
                 <Label text="Auto Parts ERP" styleClass="brand-sub"/>
             </VBox>
 
-            <Button fx:id="navDashboard" text="🏠   Dashboard"   styleClass="nav-item" onAction="#showDashboard"/>
-            <Button fx:id="navParts"     text="🔧   Spare Parts" styleClass="nav-item" onAction="#showParts"/>
-            <Button fx:id="navSales"     text="🛒   Sales"       styleClass="nav-item" onAction="#showSales"/>
-            <Button fx:id="navPending"   text="🧾   Pending Invoices" styleClass="nav-item" onAction="#showPending"/>
-            <Button fx:id="navPurchases" text="📦   Purchases"   styleClass="nav-item" onAction="#showPurchases"/>
-            <Button fx:id="navSuppliers" text="🏭   Suppliers"   styleClass="nav-item" onAction="#showSuppliers"/>
-            <Button fx:id="navReports"   text="📊   Reports"     styleClass="nav-item" onAction="#showReports"/>
-            <Button fx:id="navUsers"          text="👥   Users"             styleClass="nav-item" onAction="#showUsers"/>
-            <Button fx:id="navPendingSellers" text="🪪   Pending Sellers"   styleClass="nav-item" onAction="#showPendingSellers"/>
-            <Button fx:id="navSettings"       text="⚙   Settings"          styleClass="nav-item" onAction="#showSettings"/>
+            <Button fx:id="navDashboard"      text="🏠   Dashboard"           styleClass="nav-item" onAction="#showDashboard"/>
+
+            <!-- Customer -->
+            <Button fx:id="navCatalog"        text="�   Marketplace"          styleClass="nav-item" onAction="#showCatalog"/>
+            <Button fx:id="navMyOrders"       text="📜   My Orders"            styleClass="nav-item" onAction="#showMyOrders"/>
+            <Button fx:id="navServices"       text="🔧   Service Centers"      styleClass="nav-item" onAction="#showServices"/>
+            <Button fx:id="navMyBookings"     text="📅   My Service Bookings"  styleClass="nav-item" onAction="#showMyBookings"/>
+
+            <!-- Seller -->
+            <Button fx:id="navMyListings"     text="🧰   My Listings"          styleClass="nav-item" onAction="#showMyListings"/>
+            <Button fx:id="navIncoming"       text="📥   Incoming Orders"      styleClass="nav-item" onAction="#showIncoming"/>
+
+            <!-- Service Center -->
+            <Button fx:id="navMyOffers"       text="🧰   My Service Offers"    styleClass="nav-item" onAction="#showMyOffers"/>
+            <Button fx:id="navCenterBookings" text="📥   Incoming Bookings"    styleClass="nav-item" onAction="#showCenterBookings"/>
+
+            <!-- Staff -->
+            <Button fx:id="navParts"          text="�   Spare Parts"          styleClass="nav-item" onAction="#showParts"/>
+            <Button fx:id="navListingsReview" text="�   Listings Review"      styleClass="nav-item" onAction="#showListingsReview"/>
+            <Button fx:id="navServiceReview"  text="🪧   Service Offers Review" styleClass="nav-item" onAction="#showServiceReview"/>
+            <Button fx:id="navOrdersAdmin"    text="✅   Approve Orders"       styleClass="nav-item" onAction="#showOrdersAdmin"/>
+            <Button fx:id="navPurchases"      text="📦   Purchases"            styleClass="nav-item" onAction="#showPurchases"/>
+            <Button fx:id="navSuppliers"      text="🏭   Suppliers"            styleClass="nav-item" onAction="#showSuppliers"/>
+            <Button fx:id="navReports"        text="📊   Reports"              styleClass="nav-item" onAction="#showReports"/>
+
+            <!-- Admin -->
+            <Button fx:id="navUsers"          text="👥   Users"                styleClass="nav-item" onAction="#showUsers"/>
+            <Button fx:id="navPendingSellers" text="🪪   Pending Sellers"      styleClass="nav-item" onAction="#showPendingSellers"/>
+            <Button fx:id="navSettings"       text="⚙   Settings"             styleClass="nav-item" onAction="#showSettings"/>
 
             <Region VBox.vgrow="ALWAYS"/>
 

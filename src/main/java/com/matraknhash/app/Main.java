@@ -23,8 +23,12 @@ public class Main extends Application {
         DatabaseBootstrap.run();
         AppContext ctx = AppContext.get();
         ctx.stockMonitor.start();
-        try { ctx.invoiceServer.start(); }
-        catch (IOException e) { System.err.println("[Main] socket server not started: " + e.getMessage()); }
+        // Socket invoice ingest is part of the legacy POS pipeline -- leave it
+        // off by default and re-enable with -Dmatraknhash.socket=on if needed.
+        if ("on".equalsIgnoreCase(System.getProperty("matraknhash.socket", "off"))) {
+            try { ctx.invoiceServer.start(); }
+            catch (IOException e) { System.err.println("[Main] socket server not started: " + e.getMessage()); }
+        }
 
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Login.fxml"));
         Parent root = loader.load();
