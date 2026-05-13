@@ -14,7 +14,8 @@ public class PartDao extends BaseDao<Part> {
     @Override protected String table() { return "parts"; }
     @Override protected String[] columns() {
         return new String[]{"sku","name","category","car_make","car_model",
-                "cost_price","sell_price","quantity","min_qty","supplier_id"};
+                "cost_price","sell_price","quantity","min_qty","supplier_id",
+                "seller_id","listing_status","listing_reason"};
     }
 
     @Override protected Part extract(ResultSet rs) throws SQLException {
@@ -31,6 +32,13 @@ public class PartDao extends BaseDao<Part> {
         p.setMinQty(rs.getInt("min_qty"));
         int sid = rs.getInt("supplier_id");
         p.setSupplierId(rs.wasNull() ? null : sid);
+        int sellerId = rs.getInt("seller_id");
+        p.setSellerId(rs.wasNull() ? null : sellerId);
+        String ls = rs.getString("listing_status");
+        if (ls != null && !ls.isBlank()) {
+            try { p.setListingStatus(Part.ListingStatus.valueOf(ls)); } catch (IllegalArgumentException ignore) {}
+        }
+        p.setListingReason(rs.getString("listing_reason"));
         return p;
     }
 
@@ -46,11 +54,60 @@ public class PartDao extends BaseDao<Part> {
         ps.setInt(9, p.getMinQty());
         if (p.getSupplierId() == null) ps.setNull(10, java.sql.Types.INTEGER);
         else ps.setInt(10, p.getSupplierId());
+        if (p.getSellerId() == null) ps.setNull(11, java.sql.Types.INTEGER);
+        else ps.setInt(11, p.getSellerId());
+        ps.setString(12, (p.getListingStatus() == null ? Part.ListingStatus.LIVE : p.getListingStatus()).name());
+        ps.setString(13, p.getListingReason());
     }
 
     @Override protected void bindUpdate(PreparedStatement ps, Part p) throws SQLException {
         bindInsert(ps, p);
-        ps.setInt(11, p.getId());
+        ps.setInt(14, p.getId());
+    }
+
+    public List<Part> findLive() {
+        String sql = "SELECT * FROM parts WHERE listing_status='LIVE' AND quantity > 0 ORDER BY name";
+        return queryList(sql);
+    }
+
+    public List<Part> findBySeller(int sellerId) {
+        String sql = "SELECT * FROM parts WHERE seller_id = ? ORDER BY id DESC";
+        return queryListWithId(sql, sellerId);
+    }
+
+    public List<Part> findByListingStatus(Part.ListingStatus status) {
+        String sql = "SELECT * FROM parts WHERE listing_status = ? ORDER BY id";
+        List<Part> out = new ArrayList<>();
+        try (Connection c = conn();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, status.name());
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) out.add(extract(rs));
+            }
+        } catch (SQLException e) { throw new DaoException("findByListingStatus failed", e); }
+        return out;
+    }
+
+    private List<Part> queryList(String sql) {
+        List<Part> out = new ArrayList<>();
+        try (Connection c = conn();
+             PreparedStatement ps = c.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) out.add(extract(rs));
+        } catch (SQLException e) { throw new DaoException("query failed", e); }
+        return out;
+    }
+
+    private List<Part> queryListWithId(String sql, int id) {
+        List<Part> out = new ArrayList<>();
+        try (Connection c = conn();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) out.add(extract(rs));
+            }
+        } catch (SQLException e) { throw new DaoException("query failed", e); }
+        return out;
     }
 
     @Override protected int idOf(Part p) { return p.getId(); }

@@ -221,6 +221,178 @@ public class SaleDao {
         return out;
     }
 
+    // ====================================================================
+    //   MARKETPLACE ORDER FLOW
+    //   PLACED  ->  SELLER_ACK  ->  APPROVED  (stock deducted on APPROVED)
+    // ====================================================================
+
+    /**
+     * Customer places a marketplace order. Stock is NOT touched; the seller
+     * must "print the receipt" and admin must approve before stock changes.
+     */
+    public Sale placeOrder(Sale sale, int buyerId) {
+        try (Connection c = ConnectionFactory.borrow()) {
+            c.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = c.prepareStatement(
+                        "INSERT INTO sales(seller_id,total,status,buyer_id) VALUES (?,?,'PLACED',?)",
+                        Statement.RETURN_GENERATED_KEYS)) {
+                    ps.setInt(1, sale.getSellerId());
+                    ps.setDouble(2, sale.getTotal());
+                    ps.setInt(3, buyerId);
+                    ps.executeUpdate();
+                    try (ResultSet keys = ps.getGeneratedKeys()) {
+                        if (keys.next()) sale.setId(keys.getInt(1));
+                    }
+                }
+                try (PreparedStatement ps = c.prepareStatement(
+                        "INSERT INTO sale_items(sale_id,part_id,quantity,unit_price,subtotal) VALUES (?,?,?,?,?)")) {
+                    for (SaleItem it : sale.getItems()) {
+                        double subtotal = it.getUnitPrice() * it.getQuantity();
+                        ps.setInt(1, sale.getId());
+                        ps.setInt(2, it.getPartId());
+                        ps.setInt(3, it.getQuantity());
+                        ps.setDouble(4, it.getUnitPrice());
+                        ps.setDouble(5, subtotal);
+                        ps.executeUpdate();
+                    }
+                }
+                c.commit();
+                sale.setStatus(Sale.Status.PLACED);
+                sale.setBuyerId(buyerId);
+                return sale;
+            } catch (SQLException e) {
+                try { c.rollback(); } catch (SQLException ignore) {}
+                throw new DaoException("place order failed: " + e.getMessage(), e);
+            }
+        } catch (SQLException e) {
+            throw new DaoException("place order failed: " + e.getMessage(), e);
+        }
+    }
+
+    /** Seller "prints the receipt": PLACED -> SELLER_ACK. */
+    public void sellerAck(int saleId) {
+        try (Connection c = ConnectionFactory.borrow()) {
+            String st = readStatus(c, saleId);
+            if (!"PLACED".equals(st))
+                throw new DaoException("Order #" + saleId + " is " + st + ", cannot ack");
+            try (PreparedStatement ps = c.prepareStatement(
+                    "UPDATE sales SET status='SELLER_ACK', seller_ack_at=NOW() WHERE id=?")) {
+                ps.setInt(1, saleId);
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) { throw new DaoException("sellerAck failed: " + e.getMessage(), e); }
+    }
+
+    /** Admin approves a seller-acked order: deduct stock + flip to APPROVED. Atomic. */
+    public void approveOrder(int saleId, int adminId) {
+        try (Connection c = ConnectionFactory.borrow()) {
+            c.setAutoCommit(false);
+            try {
+                String st = readStatus(c, saleId);
+                if (!"SELLER_ACK".equals(st) && !"PLACED".equals(st))
+                    throw new DaoException("Order #" + saleId + " is " + st + ", cannot approve");
+
+                try (PreparedStatement load = c.prepareStatement(
+                            "SELECT part_id, quantity FROM sale_items WHERE sale_id=?");
+                     PreparedStatement dec = c.prepareStatement(
+                            "UPDATE parts SET quantity = quantity - ? WHERE id=? AND quantity >= ?")) {
+                    load.setInt(1, saleId);
+                    try (ResultSet rs = load.executeQuery()) {
+                        while (rs.next()) {
+                            int partId = rs.getInt(1), qty = rs.getInt(2);
+                            dec.setInt(1, qty); dec.setInt(2, partId); dec.setInt(3, qty);
+                            if (dec.executeUpdate() == 0)
+                                throw new DaoException("Insufficient stock for part #" + partId);
+                        }
+                    }
+                }
+                try (PreparedStatement upd = c.prepareStatement(
+                        "UPDATE sales SET status='APPROVED', approver_id=?, approved_at=NOW() WHERE id=?")) {
+                    upd.setInt(1, adminId); upd.setInt(2, saleId); upd.executeUpdate();
+                }
+                c.commit();
+            } catch (SQLException | DaoException e) {
+                try { c.rollback(); } catch (SQLException ignore) {}
+                if (e instanceof DaoException de) throw de;
+                throw new DaoException("approve order failed: " + e.getMessage(), e);
+            }
+        } catch (SQLException e) { throw new DaoException("approve order failed: " + e.getMessage(), e); }
+    }
+
+    /** Admin rejects an order: status -> REJECTED. No stock change. */
+    public void rejectOrder(int saleId, int adminId, String reason) {
+        try (Connection c = ConnectionFactory.borrow();
+             PreparedStatement upd = c.prepareStatement(
+                "UPDATE sales SET status='REJECTED', approver_id=?, approved_at=NOW(), reject_reason=? WHERE id=?")) {
+            upd.setInt(1, adminId);
+            upd.setString(2, reason == null ? "" : reason);
+            upd.setInt(3, saleId);
+            upd.executeUpdate();
+        } catch (SQLException e) { throw new DaoException("reject order failed: " + e.getMessage(), e); }
+    }
+
+    /** Orders placed by a given customer. */
+    public List<Sale> findByBuyer(int buyerId) {
+        String sql = "SELECT s.*, u.full_name AS seller_name FROM sales s " +
+                     "LEFT JOIN users u ON u.id = s.seller_id " +
+                     "WHERE s.buyer_id = ? ORDER BY s.created_at DESC, s.id DESC";
+        return loadSales(sql, ps -> ps.setInt(1, buyerId));
+    }
+
+    /** Marketplace orders waiting on a given seller (or already moved past). */
+    public List<Sale> findForSeller(int sellerId, Sale.Status... statuses) {
+        StringBuilder sb = new StringBuilder(
+                "SELECT s.*, b.full_name AS buyer_name FROM sales s " +
+                "LEFT JOIN users b ON b.id = s.buyer_id " +
+                "WHERE s.seller_id = ? AND s.buyer_id IS NOT NULL");
+        if (statuses != null && statuses.length > 0) {
+            sb.append(" AND s.status IN (");
+            for (int i = 0; i < statuses.length; i++) sb.append(i == 0 ? "?" : ",?");
+            sb.append(")");
+        }
+        sb.append(" ORDER BY s.created_at DESC, s.id DESC");
+        return loadSales(sb.toString(), ps -> {
+            ps.setInt(1, sellerId);
+            if (statuses != null)
+                for (int i = 0; i < statuses.length; i++) ps.setString(2 + i, statuses[i].name());
+        });
+    }
+
+    /** Generic "load sales + items" used by the marketplace queries. */
+    private List<Sale> loadSales(String sql, SqlBinder binder) {
+        List<Sale> out = new ArrayList<>();
+        try (Connection c = c();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            binder.bind(ps);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Sale s = new Sale();
+                    s.setId(rs.getInt("id"));
+                    s.setSellerId(rs.getInt("seller_id"));
+                    s.setTotal(rs.getDouble("total"));
+                    s.setStatus(Sale.Status.valueOf(rs.getString("status")));
+                    int buyer = rs.getInt("buyer_id");
+                    if (!rs.wasNull()) s.setBuyerId(buyer);
+                    Timestamp createdAt = rs.getTimestamp("created_at");
+                    if (createdAt != null) s.setCreatedAt(createdAt.toLocalDateTime());
+                    Timestamp ackAt = rs.getTimestamp("seller_ack_at");
+                    if (ackAt != null) s.setSellerAckAt(ackAt.toLocalDateTime());
+                    try { s.setSellerName(rs.getString("seller_name")); } catch (SQLException ignore) {}
+                    try { s.setBuyerName(rs.getString("buyer_name"));   } catch (SQLException ignore) {}
+                    out.add(s);
+                }
+            }
+        } catch (SQLException e) {
+            throw new DaoException("loadSales failed: " + e.getMessage(), e);
+        }
+        for (Sale s : out) s.getItems().addAll(findItems(s.getId()));
+        return out;
+    }
+
+    @FunctionalInterface
+    private interface SqlBinder { void bind(PreparedStatement ps) throws SQLException; }
+
     public int countPending() {
         try (Connection c = c();
              PreparedStatement ps = c.prepareStatement(
