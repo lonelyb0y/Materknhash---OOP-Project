@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<HBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.matraknhash.ui.controller.PurchasesController"
+      spacing="18">
+
+    <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="12">
+        <Label text="Supplier" styleClass="section-title"/>
+        <ComboBox fx:id="supplierCombo" prefWidth="320"/>
+
+        <Label text="Purchase Items" styleClass="section-title"/>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <ComboBox fx:id="partCombo" promptText="Part" prefWidth="280"/>
+            <TextField fx:id="qtyField"  promptText="Qty"  prefWidth="80"/>
+            <TextField fx:id="costField" promptText="Unit cost" prefWidth="100"/>
+            <Button text="+ Add" styleClass="btn-secondary" onAction="#onAddItem"/>
+        </HBox>
+
+        <TableView fx:id="itemsTable" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colPart" text="Part"     prefWidth="260"/>
+                <TableColumn fx:id="colCost" text="Unit Cost" prefWidth="100"/>
+                <TableColumn fx:id="colQty"  text="Qty"      prefWidth="80"/>
+                <TableColumn fx:id="colSub"  text="Subtotal" prefWidth="120"/>
+                <TableColumn fx:id="colDel"  text=""         prefWidth="60"/>
+            </columns>
+        </TableView>
+    </VBox>
+
+    <VBox styleClass="card" minWidth="300" maxWidth="340" spacing="12">
+        <Label text="Purchase Summary" styleClass="section-title"/>
+        <HBox><Label text="Date" styleClass="muted"/><Region HBox.hgrow="ALWAYS"/><Label fx:id="lblDate"/></HBox>
+        <HBox><Label text="Lines" styleClass="muted"/><Region HBox.hgrow="ALWAYS"/><Label fx:id="lblLines" text="0"/></HBox>
+        <HBox><Label text="Total" styleClass="section-title"/><Region HBox.hgrow="ALWAYS"/><Label fx:id="lblTotal" text="0 EGP" styleClass="section-title"/></HBox>
+        <Label fx:id="status" managed="false" visible="false"/>
+        <HBox spacing="8">
+            <padding><Insets top="6"/></padding>
+            <Button text="Clear" styleClass="btn-secondary" onAction="#onClear"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Save" styleClass="btn-primary" onAction="#onSave"/>
+        </HBox>
+    </VBox>
+</HBox>
