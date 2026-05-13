@@ -50,7 +50,7 @@ public class SaleDao {
             }
 
             try (PreparedStatement ps = c.prepareStatement(
-                    "INSERT INTO sale_items(sale_id,part_id,quantity,unit_price) VALUES (?,?,?,?)");
+                    "INSERT INTO sale_items(sale_id,part_id,quantity,unit_price,subtotal) VALUES (?,?,?,?,?)");
                  PreparedStatement dec = c.prepareStatement(
                     "UPDATE parts SET quantity = quantity - ? WHERE id = ? AND quantity >= ?")) {
 
@@ -62,10 +62,12 @@ public class SaleDao {
                         throw new DaoException("Not enough stock for part " + it.getPartName());
                     }
 
+                    double subtotal = it.getUnitPrice() * it.getQuantity();
                     ps.setInt(1, sale.getId());
                     ps.setInt(2, it.getPartId());
                     ps.setInt(3, it.getQuantity());
                     ps.setDouble(4, it.getUnitPrice());
+                    ps.setDouble(5, subtotal);
                     ps.executeUpdate();
                 }
             }
@@ -108,11 +110,12 @@ public class SaleDao {
 
     /** Daily sales totals for the last N days, ordered ascending by day. */
     public Map<String, Double> dailyTotals(int days) {
-        String sql = "SELECT date(created_at) d, SUM(total) t FROM sales " +
-                     "WHERE created_at >= date('now', ?) GROUP BY d ORDER BY d";
+        String sql = "SELECT DATE(created_at) d, SUM(total) t FROM sales " +
+                     "WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) " +
+                     "GROUP BY d ORDER BY d";
         Map<String, Double> out = new LinkedHashMap<>();
         try (PreparedStatement ps = c().prepareStatement(sql)) {
-            ps.setString(1, "-" + days + " day");
+            ps.setInt(1, days);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) out.put(rs.getString("d"), rs.getDouble("t"));
             }

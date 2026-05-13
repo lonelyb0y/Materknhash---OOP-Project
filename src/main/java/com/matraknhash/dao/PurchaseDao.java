@@ -22,18 +22,19 @@ public class PurchaseDao {
         try {
             c.setAutoCommit(false);
             try (PreparedStatement ps = c.prepareStatement(
-                    "INSERT INTO purchases(supplier_id,user_id,total) VALUES (?,?,?)",
+                    "INSERT INTO purchases(supplier_id,supplier_name,user_id,total) VALUES (?,?,?,?)",
                     Statement.RETURN_GENERATED_KEYS)) {
                 ps.setInt(1, pur.getSupplierId());
-                ps.setInt(2, pur.getUserId());
-                ps.setDouble(3, pur.getTotal());
+                ps.setString(2, pur.getSupplierName() == null ? "" : pur.getSupplierName());
+                ps.setInt(3, pur.getUserId());
+                ps.setDouble(4, pur.getTotal());
                 ps.executeUpdate();
                 try (ResultSet keys = ps.getGeneratedKeys()) {
                     if (keys.next()) pur.setId(keys.getInt(1));
                 }
             }
             try (PreparedStatement ps = c.prepareStatement(
-                    "INSERT INTO purchase_items(purchase_id,part_id,quantity,unit_cost) VALUES (?,?,?,?)");
+                    "INSERT INTO purchase_items(purchase_id,part_id,quantity,unit_cost,subtotal) VALUES (?,?,?,?,?)");
                  PreparedStatement inc = c.prepareStatement(
                     "UPDATE parts SET quantity = quantity + ? WHERE id = ?")) {
 
@@ -42,10 +43,12 @@ public class PurchaseDao {
                     inc.setInt(2, it.getPartId());
                     inc.executeUpdate();
 
+                    double subtotal = it.getUnitCost() * it.getQuantity();
                     ps.setInt(1, pur.getId());
                     ps.setInt(2, it.getPartId());
                     ps.setInt(3, it.getQuantity());
                     ps.setDouble(4, it.getUnitCost());
+                    ps.setDouble(5, subtotal);
                     ps.executeUpdate();
                 }
             }

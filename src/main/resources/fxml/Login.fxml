@@ -31,7 +31,6 @@
 
         <TextField fx:id="usernameField" promptText="Username"/>
         <PasswordField fx:id="passwordField" promptText="Password"/>
-        <ComboBox fx:id="roleCombo" promptText="Select Role" prefWidth="380"/>
 
         <Label fx:id="errorLabel" styleClass="error-label" managed="false" visible="false"/>
 

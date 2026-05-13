@@ -83,7 +83,11 @@ public class MainShellController {
             pageTitle.setText(title);
             setActive(active);
         } catch (Exception e) {
-            new Alert(Alert.AlertType.ERROR, "Failed to load " + fxml + ":\n" + e.getMessage()).showAndWait();
+            e.printStackTrace();
+            Throwable root = e;
+            while (root.getCause() != null) root = root.getCause();
+            new Alert(Alert.AlertType.ERROR,
+                    "Failed to load " + fxml + ":\n" + root.getClass().getSimpleName() + ": " + root.getMessage()).showAndWait();
         }
     }
 
