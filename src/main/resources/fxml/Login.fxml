@@ -37,11 +37,10 @@
 
         <Button text="Login" onAction="#onLogin" styleClass="btn-primary" prefWidth="340" defaultButton="true"/>
 
-        <HBox alignment="CENTER" spacing="6">
-            <padding><Insets top="6"/></padding>
-            <Label text="New here?" styleClass="muted"/>
-            <Hyperlink text="Create an account" onAction="#onSignup"/>
-        </HBox>
+        <Region prefHeight="4"/>
+        <Label text="Don't have an account yet?" styleClass="muted"/>
+        <Button text="Create new account (Customer / Seller)"
+                onAction="#onSignup" styleClass="btn-secondary" prefWidth="340"/>
 
         <HBox alignment="CENTER">
             <padding><Insets top="6"/></padding>

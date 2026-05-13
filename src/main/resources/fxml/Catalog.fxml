@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.matraknhash.ui.controller.CatalogController"
+      spacing="14" styleClass="page-root">
+    <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label text="Auto Parts Marketplace" styleClass="page-h1"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <TextField fx:id="searchField" promptText="Search parts..." prefWidth="280"/>
+        <ComboBox fx:id="categoryFilter" prefWidth="180"/>
+        <Button fx:id="cartButton" text="🛒  Cart (0)" onAction="#onOpenCart" styleClass="btn-primary"/>
+    </HBox>
+
+    <Label fx:id="emptyLabel" text="Loading listings..." styleClass="muted" managed="false" visible="false"/>
+
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="catalog-scroll">
+        <FlowPane fx:id="grid" hgap="16" vgap="16">
+            <padding><Insets top="6" right="6" bottom="6" left="6"/></padding>
+        </FlowPane>
+    </ScrollPane>
+</VBox>
