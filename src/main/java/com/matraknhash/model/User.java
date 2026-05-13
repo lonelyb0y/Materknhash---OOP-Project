@@ -43,6 +43,7 @@ public abstract class User {
             case EMPLOYEE -> new Employee(id, username, passwordHash, fullName, active);
             case SELLER   -> new Seller(id, username, passwordHash, fullName, active);
             case CUSTOMER -> new Customer(id, username, passwordHash, fullName, active);
+            case SERVICE_CENTER -> new ServiceCenter(id, username, passwordHash, fullName, active);
         };
     }
 

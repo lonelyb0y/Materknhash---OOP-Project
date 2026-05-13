@@ -10,20 +10,21 @@
     <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
     <HBox alignment="CENTER_LEFT" spacing="10">
-        <Label text="Pending Seller Applications" styleClass="page-h1"/>
+        <Label text="Pending Account Approvals" styleClass="page-h1"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Label fx:id="lblCount" text="0 awaiting review" styleClass="muted"/>
         <Button text="Refresh" onAction="#onRefresh" styleClass="btn-secondary"/>
     </HBox>
 
-    <Label text="These applicants signed up as sellers and cannot log in until you approve them."
+    <Label text="Sellers and service centers who signed up. They can't log in until you approve them."
            styleClass="muted" wrapText="true"/>
 
     <TableView fx:id="table" VBox.vgrow="ALWAYS">
         <columns>
             <TableColumn fx:id="colId"   text="ID"        prefWidth="60"/>
             <TableColumn fx:id="colUser" text="Username"  prefWidth="160"/>
-            <TableColumn fx:id="colName" text="Full name" prefWidth="240"/>
+            <TableColumn fx:id="colName" text="Full name" prefWidth="220"/>
+            <TableColumn fx:id="colRole" text="Type"      prefWidth="120"/>
             <TableColumn fx:id="colWhen" text="Applied"   prefWidth="160"/>
             <TableColumn fx:id="colAct"  text="Decision"  prefWidth="200"/>
         </columns>

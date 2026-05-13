@@ -43,15 +43,16 @@ public class AuthService {
         if (username == null || username.isBlank())   return Result.fail("Username is required.");
         if (password == null || password.length() < 4) return Result.fail("Password must be at least 4 characters.");
         if (fullName == null || fullName.isBlank())   return Result.fail("Full name is required.");
-        if (role != Role.CUSTOMER && role != Role.SELLER)
-            return Result.fail("Only customers or sellers can sign up here.");
+        if (role != Role.CUSTOMER && role != Role.SELLER && role != Role.SERVICE_CENTER)
+            return Result.fail("Only customers, sellers, or service centers can sign up here.");
 
         if (userDao.findByUsername(username.trim()).isPresent())
             return Result.fail("That username is already taken.");
 
         String hash = BCrypt.withDefaults().hashToString(10, password.toCharArray());
         User u = User.from(0, username.trim(), hash, fullName.trim(), role, true);
-        u.setStatus(role == Role.SELLER ? User.Status.PENDING_APPROVAL : User.Status.ACTIVE);
+        // Anyone but customers needs admin review before they can log in.
+        u.setStatus(role == Role.CUSTOMER ? User.Status.ACTIVE : User.Status.PENDING_APPROVAL);
         return Result.ok(userDao.insert(u));
     }
 

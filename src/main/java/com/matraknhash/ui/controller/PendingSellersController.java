@@ -24,7 +24,7 @@ public class PendingSellersController {
 
     @FXML private TableView<User> table;
     @FXML private TableColumn<User, Number> colId;
-    @FXML private TableColumn<User, String> colUser, colName, colWhen;
+    @FXML private TableColumn<User, String> colUser, colName, colRole, colWhen;
     @FXML private TableColumn<User, Void>   colAct;
     @FXML private Label lblCount, status;
 
@@ -35,6 +35,8 @@ public class PendingSellersController {
         colId.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getId()));
         colUser.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getUsername()));
         colName.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getFullName()));
+        if (colRole != null) colRole.setCellValueFactory(c -> new SimpleStringProperty(
+                c.getValue().getRole() == com.matraknhash.model.Role.SERVICE_CENTER ? "Service Center" : "Seller"));
         colWhen.setCellValueFactory(c -> new SimpleStringProperty(
                 c.getValue().getCreatedAt() == null ? "" : c.getValue().getCreatedAt().format(WHEN)));
 
@@ -47,17 +49,17 @@ public class PendingSellersController {
                 no.getStyleClass().add("btn-danger");
                 ok.setOnAction(e -> {
                     User u = getTableView().getItems().get(getIndex());
-                    AppContext.get().userService.approveSeller(u.getId());
+                    AppContext.get().userService.approveAccount(u.getId());
                     showOk("Approved " + u.getUsername() + " — they can now log in.");
                     refresh();
                 });
                 no.setOnAction(e -> {
                     User u = getTableView().getItems().get(getIndex());
                     Alert a = new Alert(Alert.AlertType.CONFIRMATION,
-                            "Reject seller application for \"" + u.getUsername() + "\"?",
+                            "Reject application for \"" + u.getUsername() + "\"?",
                             ButtonType.OK, ButtonType.CANCEL);
                     if (a.showAndWait().filter(b -> b == ButtonType.OK).isPresent()) {
-                        AppContext.get().userService.rejectSeller(u.getId());
+                        AppContext.get().userService.rejectAccount(u.getId());
                         showOk("Rejected " + u.getUsername() + ".");
                         refresh();
                     }
@@ -77,10 +79,10 @@ public class PendingSellersController {
     private void onRefresh() { refresh(); }
 
     private void refresh() {
-        List<User> pending = AppContext.get().userService.listPendingSellers();
+        List<User> pending = AppContext.get().userService.listPendingApprovals();
         items.setAll(pending);
         lblCount.setText(pending.size() + " awaiting review");
-        if (pending.isEmpty()) showInfo("No pending seller applications. Sellers self-register from the Sign Up screen.");
+        if (pending.isEmpty()) showInfo("No pending applications. Sellers and service centers self-register from the Sign Up screen.");
     }
 
     private void showOk(String s)   { status.setText(s); }

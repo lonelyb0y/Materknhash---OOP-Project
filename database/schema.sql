@@ -169,3 +169,38 @@ CREATE INDEX idx_parts_seller   ON parts(seller_id);
 CREATE INDEX idx_parts_listing  ON parts(listing_status);
 CREATE INDEX idx_sales_buyer    ON sales(buyer_id);
 CREATE INDEX idx_notif_unread   ON notifications(user_id, is_read, created_at);
+
+-- =====================================================================
+-- SERVICE-CENTERS MIGRATION (M5)
+-- Workshops/centres can sign up (role=SERVICE_CENTER), publish service
+-- offers (oil change, brake job, ...), and customers can book those
+-- services. Admin reviews offers before they go live.
+-- =====================================================================
+CREATE TABLE IF NOT EXISTS service_offers (
+    id          INT           NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    center_id   INT           NOT NULL,
+    title       VARCHAR(160)  NOT NULL,
+    description VARCHAR(500)  NULL,
+    price       DECIMAL(12,2) NOT NULL DEFAULT 0,
+    status      VARCHAR(20)   NOT NULL DEFAULT 'PENDING_ADMIN',
+    reason      VARCHAR(255)  NULL,
+    created_at  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_so_center FOREIGN KEY (center_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS service_requests (
+    id           INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    customer_id  INT          NOT NULL,
+    offer_id     INT          NOT NULL,
+    vehicle_note VARCHAR(255) NULL,
+    status       VARCHAR(20)  NOT NULL DEFAULT 'REQUESTED',
+    created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_sr_customer FOREIGN KEY (customer_id) REFERENCES users(id),
+    CONSTRAINT fk_sr_offer    FOREIGN KEY (offer_id)    REFERENCES service_offers(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX idx_so_center   ON service_offers(center_id);
+CREATE INDEX idx_so_status   ON service_offers(status);
+CREATE INDEX idx_sr_customer ON service_requests(customer_id);
+CREATE INDEX idx_sr_offer    ON service_requests(offer_id);
+CREATE INDEX idx_sr_status   ON service_requests(status);

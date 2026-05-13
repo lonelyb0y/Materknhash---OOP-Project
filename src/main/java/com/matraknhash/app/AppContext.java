@@ -20,6 +20,7 @@ public final class AppContext {
     public final PartDao partDao         = new PartDao();
     public final SaleDao saleDao         = new SaleDao();
     public final PurchaseDao purchaseDao = new PurchaseDao();
+    public final ServiceCenterDao serviceCenterDao = new ServiceCenterDao();
 
     public final AuthService authService         = new AuthService(userDao);
     public final UserService userService         = new UserService(userDao);
@@ -27,6 +28,8 @@ public final class AppContext {
     public final PartService partService         = new PartService(partDao);
     public final SaleService saleService         = new SaleService(saleDao);
     public final PurchaseService purchaseService = new PurchaseService(purchaseDao);
+    public final ListingService listingService   = new ListingService(partDao, supplierDao);
+    public final ServiceCenterService serviceCenterService = new ServiceCenterService(serviceCenterDao);
 
     public final EventBus<LowStockEvent> lowStockBus = new EventBus<>();
     public final StockMonitorTask stockMonitor       = new StockMonitorTask(partDao, lowStockBus, 30);

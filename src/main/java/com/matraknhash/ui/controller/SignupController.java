@@ -23,21 +23,28 @@ public class SignupController {
 
     @FXML
     public void initialize() {
-        roleCombo.setItems(FXCollections.observableArrayList("Buy parts (Customer)", "Sell parts (Seller)"));
+        roleCombo.setItems(FXCollections.observableArrayList(
+                "Buy parts (Customer)",
+                "Sell parts (Seller)",
+                "Offer car services (Service Center)"));
         roleCombo.setValue("Buy parts (Customer)");
         roleCombo.valueProperty().addListener((obs, oldV, newV) -> refreshHint());
         refreshHint();
     }
 
     private void refreshHint() {
-        Role r = pickedRole();
-        subtitleLabel.setText(r == Role.SELLER
-                ? "Seller accounts need admin approval before they can list parts."
-                : "Customers can start shopping immediately after sign-up.");
+        subtitleLabel.setText(switch (pickedRole()) {
+            case SELLER         -> "Seller accounts need admin approval before they can list parts.";
+            case SERVICE_CENTER -> "Workshops need admin approval before they can publish services.";
+            default             -> "Customers can start shopping immediately after sign-up.";
+        });
     }
 
     private Role pickedRole() {
-        return "Sell parts (Seller)".equals(roleCombo.getValue()) ? Role.SELLER : Role.CUSTOMER;
+        String v = roleCombo.getValue();
+        if ("Sell parts (Seller)".equals(v))                  return Role.SELLER;
+        if ("Offer car services (Service Center)".equals(v))  return Role.SERVICE_CENTER;
+        return Role.CUSTOMER;
     }
 
     @FXML
@@ -51,10 +58,12 @@ public class SignupController {
         if (r.isFail()) { showError(r.error()); return; }
 
         User u = r.value();
-        String msg = (u.getRole() == Role.SELLER)
-                ? "Application submitted! An admin will review your seller account shortly. " +
-                  "You'll be able to log in once approved."
-                : "Account created. You can log in now.";
+        String msg = switch (u.getRole()) {
+            case SELLER         -> "Seller application submitted! An admin will review it shortly. " +
+                                   "You'll be able to log in once approved.";
+            case SERVICE_CENTER -> "Service-centre application submitted! An admin will review it shortly.";
+            default             -> "Account created. You can log in now.";
+        };
         showOk(msg);
         usernameField.clear(); fullNameField.clear(); passwordField.clear();
     }

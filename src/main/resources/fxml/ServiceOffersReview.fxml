@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.matraknhash.ui.controller.ServiceOffersReviewController"
+      spacing="14" styleClass="page-root">
+    <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label text="Service Offers Review" styleClass="page-h1"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblCount" text="0 awaiting review" styleClass="muted"/>
+        <Button text="Refresh" onAction="#onRefresh" styleClass="btn-secondary"/>
+    </HBox>
+    <Label text="Approve a service offer to publish it on the customer-facing service marketplace."
+           styleClass="muted" wrapText="true"/>
+
+    <SplitPane dividerPositions="0.55" VBox.vgrow="ALWAYS">
+        <items>
+            <TableView fx:id="table">
+                <columns>
+                    <TableColumn fx:id="colId"     text="#"        prefWidth="60"/>
+                    <TableColumn fx:id="colTitle"  text="Title"    prefWidth="200"/>
+                    <TableColumn fx:id="colCenter" text="Center"   prefWidth="160"/>
+                    <TableColumn fx:id="colPrice"  text="Price"    prefWidth="100"/>
+                </columns>
+            </TableView>
+
+            <VBox spacing="10">
+                <Label fx:id="lblHeader" text="Pick an offer →" styleClass="section-title"/>
+                <Label fx:id="lblDesc" wrapText="true" styleClass="muted"/>
+                <HBox spacing="10" alignment="CENTER_RIGHT">
+                    <Button fx:id="btnReject"  text="Reject"  onAction="#onReject"  styleClass="btn-danger"  disable="true"/>
+                    <Button fx:id="btnApprove" text="Publish" onAction="#onApprove" styleClass="btn-primary" disable="true"/>
+                </HBox>
+                <Label fx:id="status" wrapText="true" styleClass="muted"/>
+            </VBox>
+        </items>
+    </SplitPane>
+</VBox>
