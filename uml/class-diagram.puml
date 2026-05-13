@@ -1,0 +1,370 @@
+@startuml MetrkanshERP
+' =====================================================================
+' Metrkansh Auto-Parts ERP - class diagram
+' Render with:  plantuml uml/class-diagram.puml
+'   or paste in https://www.plantuml.com/plantuml
+' =====================================================================
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam classFontStyle bold
+skinparam ArrowThickness 1.0
+skinparam linetype ortho
+hide empty members
+
+title Metrkansh Auto-Parts ERP — Class Diagram
+
+' =================== model ===================
+package "model" <<Frame>> {
+
+    enum Role {
+        ADMIN
+        EMPLOYEE
+        SELLER
+        + of(s: String): Role
+    }
+
+    abstract class User {
+        # id: int
+        # username: String
+        # passwordHash: String
+        # fullName: String
+        # role: Role
+        # active: boolean
+        # createdAt: LocalDateTime
+        + {abstract} permissions(): String
+        + {static} from(...): User
+    }
+
+    class Admin {
+        + permissions(): String
+    }
+    class Employee {
+        + permissions(): String
+    }
+    class Seller {
+        + permissions(): String
+    }
+
+    class Supplier {
+        - id: int
+        - name: String
+        - phone: String
+        - email: String
+        - address: String
+    }
+
+    class Part {
+        - id: int
+        - sku: String
+        - name: String
+        - category: String
+        - carMake: String
+        - carModel: String
+        - costPrice: double
+        - sellPrice: double
+        - quantity: int
+        - minQty: int
+        - supplierId: Integer
+    }
+
+    class Sale {
+        - id: int
+        - sellerId: int
+        - sellerName: String
+        - total: double
+        - createdAt: LocalDateTime
+        - items: List<SaleItem>
+        + addItem(it: SaleItem): void
+        + recomputeTotal(): void
+    }
+
+    class SaleItem {
+        - partId: int
+        - partSku: String
+        - partName: String
+        - quantity: int
+        - unitPrice: double
+        + getSubtotal(): double
+    }
+
+    class Purchase {
+        - id: int
+        - supplierId: int
+        - supplierName: String
+        - userId: int
+        - total: double
+        - createdAt: LocalDateTime
+        - items: List<PurchaseItem>
+        + addItem(it: PurchaseItem): void
+        + recomputeTotal(): void
+    }
+
+    class PurchaseItem {
+        - partId: int
+        - partSku: String
+        - partName: String
+        - quantity: int
+        - unitCost: double
+        + getSubtotal(): double
+    }
+}
+
+User <|-- Admin
+User <|-- Employee
+User <|-- Seller
+User *-- Role
+Sale "1" *-- "*" SaleItem
+Purchase "1" *-- "*" PurchaseItem
+Part "0..*" --> "0..1" Supplier : supplied by
+
+' =================== dao ===================
+package "dao" <<Frame>> {
+
+    abstract class "BaseDao<T>" as BaseDao {
+        # {abstract} table(): String
+        # {abstract} columns(): String[]
+        # {abstract} extract(rs): T
+        # {abstract} bindInsert(ps, e): void
+        # {abstract} bindUpdate(ps, e): void
+        + findById(id: int): Optional<T>
+        + findAll(): List<T>
+        + insert(e: T): T
+        + update(e: T): boolean
+        + delete(id: int): boolean
+    }
+
+    class UserDao {
+        + findByUsername(u): Optional<User>
+    }
+    class PartDao {
+        + findLowStock(): List<Part>
+        + search(t: String): List<Part>
+        + decrementStock(id, qty): boolean
+        + incrementStock(id, qty): void
+        + countAll(): int
+    }
+    class SupplierDao
+    class SaleDao {
+        + create(s: Sale): Sale
+        + totalSalesSince(t): double
+        + totalProfitSince(t): double
+        + dailyTotals(days): Map<String, Double>
+        + topSelling(n): List<Object[]>
+        + countAll(): int
+    }
+    class PurchaseDao {
+        + create(p: Purchase): Purchase
+        + totalPurchasesAllTime(): double
+    }
+    class DaoException
+}
+
+BaseDao <|-- UserDao
+BaseDao <|-- PartDao
+BaseDao <|-- SupplierDao
+
+UserDao ..> User
+PartDao ..> Part
+SupplierDao ..> Supplier
+SaleDao ..> Sale
+SaleDao ..> SaleItem
+PurchaseDao ..> Purchase
+PurchaseDao ..> PurchaseItem
+
+' =================== db ===================
+package "db" <<Frame>> {
+    class ConnectionFactory {
+        + {static} get(): Connection
+        + {static} serverOnly(): Connection
+        + {static} dbName(): String
+        + {static} dbPath(): String
+    }
+    class DatabaseBootstrap {
+        + {static} run(): void
+    }
+}
+
+BaseDao ..> ConnectionFactory : uses
+SaleDao ..> ConnectionFactory : uses
+PurchaseDao ..> ConnectionFactory : uses
+DatabaseBootstrap ..> ConnectionFactory : uses
+
+' =================== service ===================
+package "service" <<Frame>> {
+    class AuthService {
+        + login(u, p): Result<User>
+        + createUser(...): User
+    }
+    class PartService {
+        + all(): List<Part>
+        + search(t): List<Part>
+        + lowStock(): List<Part>
+        + save(p): Part
+        + delete(id): boolean
+    }
+    class SupplierService {
+        + all(): List<Supplier>
+        + save(s): Supplier
+        + delete(id): boolean
+    }
+    class UserService {
+        + all(): List<User>
+        + createUser(...): User
+        + setActive(id, on): boolean
+    }
+    class SaleService {
+        + create(s): Sale
+        + totalSalesLast30Days(): double
+        + totalProfitLast30Days(): double
+        + dailyTotals(d): Map
+        + topSelling(n): List
+    }
+    class PurchaseService {
+        + create(p): Purchase
+        + totalPurchases(): double
+    }
+}
+
+AuthService o-- UserDao
+PartService o-- PartDao
+SupplierService o-- SupplierDao
+UserService o-- UserDao
+SaleService o-- SaleDao
+PurchaseService o-- PurchaseDao
+
+' =================== net (sockets) ===================
+package "net" <<Frame>> {
+    class InvoiceMessage {
+        + type: Type
+        + sale: Sale
+        + info: String
+        + {static} request(s): InvoiceMessage
+        + {static} ack(id): InvoiceMessage
+        + {static} error(msg): InvoiceMessage
+    }
+    enum "InvoiceMessage.Type" as IMType {
+        INVOICE_REQUEST
+        INVOICE_ACK
+        INVOICE_ERROR
+        STOCK_UPDATE
+    }
+    class InvoiceServer {
+        - port: int
+        - saleService: SaleService
+        + start(): void
+        + stop(): void
+    }
+    class InvoiceClient {
+        + send(s: Sale): InvoiceMessage
+    }
+}
+
+InvoiceMessage *-- IMType
+InvoiceServer o-- SaleService
+InvoiceClient ..> InvoiceMessage
+InvoiceServer ..> InvoiceMessage
+
+' =================== thread ===================
+package "thread" <<Frame>> {
+    class StockMonitorTask {
+        - dao: PartDao
+        - bus: EventBus
+        - intervalSec: int
+        + start(): void
+        + stop(): void
+        + run(): void
+    }
+    class LowStockEvent {
+        + parts: List<Part>
+        + at: LocalDateTime
+    }
+}
+
+StockMonitorTask ..|> Runnable
+StockMonitorTask o-- PartDao
+StockMonitorTask --> LowStockEvent : publishes
+
+' =================== util ===================
+package "util" <<Frame>> {
+    class "EventBus<E>" as EventBus {
+        + subscribe(c: Consumer<E>): void
+        + publish(e: E): void
+    }
+    class "Result<T>" as Result {
+        + value: T
+        + error: String
+        + isOk(): boolean
+        + isFail(): boolean
+        + {static} ok(v): Result<T>
+        + {static} fail(m): Result<T>
+    }
+}
+
+StockMonitorTask o-- EventBus
+AuthService ..> Result
+
+' =================== app ===================
+package "app" <<Frame>> {
+    class Main {
+        + start(stage): void
+        + main(args): void
+    }
+    class Launcher
+    class AppContext <<singleton>> {
+        + userDao, partDao, supplierDao
+        + saleDao, purchaseDao
+        + authService, partService, ...
+        + invoiceServer: InvoiceServer
+        + stockMonitor: StockMonitorTask
+        + {static} get(): AppContext
+    }
+    class Session <<singleton>> {
+        - currentUser: User
+        + login(u: User): void
+        + logout(): void
+        + currentUser(): User
+    }
+}
+
+Main ..> DatabaseBootstrap
+Main ..> AppContext
+AppContext o-- AuthService
+AppContext o-- PartService
+AppContext o-- SupplierService
+AppContext o-- UserService
+AppContext o-- SaleService
+AppContext o-- PurchaseService
+AppContext o-- InvoiceServer
+AppContext o-- StockMonitorTask
+Session o-- User
+
+' =================== ui (collapsed) ===================
+package "ui.controller" <<Frame>> {
+    class LoginController
+    class MainShellController
+    class DashboardController
+    class PartsController
+    class SuppliersController
+    class PurchasesController
+    class SalesController
+    class ReportsController
+    class UsersController
+    class SettingsController
+}
+
+LoginController ..> AuthService
+LoginController ..> Session
+DashboardController ..> AppContext
+PartsController ..> PartService
+SuppliersController ..> SupplierService
+PurchasesController ..> PurchaseService
+SalesController ..> InvoiceClient
+SalesController ..> Session
+ReportsController ..> SaleService
+ReportsController ..> PurchaseService
+UsersController ..> UserService
+SettingsController ..> AppContext
+
+@enduml
