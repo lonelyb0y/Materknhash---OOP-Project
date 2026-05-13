@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.matraknhash.ui.controller.ReportsController"
+      spacing="18">
+
+    <HBox spacing="14">
+        <VBox styleClass="stat-card,stat-blue"  HBox.hgrow="ALWAYS">
+            <Label text="Total Sales (30d)"   styleClass="stat-label"/>
+            <Label fx:id="lblSales" text="0"  styleClass="stat-value"/>
+        </VBox>
+        <VBox styleClass="stat-card,stat-green" HBox.hgrow="ALWAYS">
+            <Label text="Total Profit (30d)"  styleClass="stat-label"/>
+            <Label fx:id="lblProfit" text="0" styleClass="stat-value"/>
+        </VBox>
+        <VBox styleClass="stat-card,stat-yellow" HBox.hgrow="ALWAYS">
+            <Label text="Total Orders"        styleClass="stat-label"/>
+            <Label fx:id="lblOrders" text="0" styleClass="stat-value"/>
+        </VBox>
+        <VBox styleClass="stat-card,stat-red"   HBox.hgrow="ALWAYS">
+            <Label text="Total Purchases"     styleClass="stat-label"/>
+            <Label fx:id="lblPurchases" text="0" styleClass="stat-value"/>
+        </VBox>
+    </HBox>
+
+    <HBox spacing="18">
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="6">
+            <Label text="Sales Over Time" styleClass="section-title"/>
+            <BarChart fx:id="barChart" prefHeight="320">
+                <xAxis><CategoryAxis/></xAxis>
+                <yAxis><NumberAxis/></yAxis>
+            </BarChart>
+        </VBox>
+        <VBox styleClass="card" minWidth="320" maxWidth="380" spacing="6">
+            <Label text="Top Selling Parts" styleClass="section-title"/>
+            <PieChart fx:id="pieChart" prefHeight="320"/>
+        </VBox>
+    </HBox>
+</VBox>
