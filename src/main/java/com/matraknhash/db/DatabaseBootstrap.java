@@ -33,7 +33,12 @@ public final class DatabaseBootstrap {
         try (Connection c = ConnectionFactory.get()) {
             applySql(c, SCHEMA);
             ensureDefaultUsers(c);
-            applySql(c, SEED);
+            // Demo data is opt-in: run once with -Dmatraknhash.seed=on for a
+            // fresh demo machine, then leave it off so the operator's own data
+            // is never overwritten.
+            if ("on".equalsIgnoreCase(System.getProperty("matraknhash.seed", "off"))) {
+                applySql(c, SEED);
+            }
         }
     }
 
