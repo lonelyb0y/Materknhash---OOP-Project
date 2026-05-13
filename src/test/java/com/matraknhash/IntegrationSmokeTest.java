@@ -63,7 +63,7 @@ class IntegrationSmokeTest {
     }
 
     @Test @Order(3)
-    void saleOverSocketDecrementsStock() throws Exception {
+    void saleOverSocketIsPendingThenApprovalDecrementsStock() throws Exception {
         // Pick any part with plenty of stock
         List<Part> stocked = ctx.partService.all().stream()
                 .filter(p -> p.getQuantity() >= 2).toList();
@@ -80,12 +80,45 @@ class IntegrationSmokeTest {
         assertEquals(InvoiceMessage.Type.INVOICE_ACK, resp.getType(),
                 "server should ACK, got " + resp.getType() + " / " + resp.getInfo());
 
+        // Stock must NOT be touched while invoice is pending.
+        Part stillBefore = ctx.partService.all().stream()
+                .filter(p -> p.getId() == target.getId()).findFirst().orElseThrow();
+        assertEquals(stockBefore, stillBefore.getQuantity(),
+                "pending invoice must not deduct stock");
+
+        // Find that pending sale and approve it as admin (id=1).
+        int saleId = Integer.parseInt(resp.getInfo().replace("sale#", ""));
+        ctx.saleService.approve(saleId, 1);
+
         Part after = ctx.partService.all().stream()
                 .filter(p -> p.getId() == target.getId()).findFirst().orElseThrow();
-        assertEquals(stockBefore - 2, after.getQuantity(), "stock must decrement by 2");
+        assertEquals(stockBefore - 2, after.getQuantity(),
+                "approval must decrement stock by 2");
     }
 
     @Test @Order(4)
+    void rejectingPendingSaleLeavesStockUntouched() throws Exception {
+        Part target = ctx.partService.all().stream()
+                .filter(p -> p.getQuantity() >= 1).findFirst().orElseThrow();
+        int stockBefore = target.getQuantity();
+
+        Sale sale = new Sale(3, "Default Seller");
+        sale.addItem(new SaleItem(target.getId(), target.getSku(), target.getName(),
+                1, target.getSellPrice()));
+
+        InvoiceMessage resp = new InvoiceClient("localhost", 5566).send(sale);
+        assertEquals(InvoiceMessage.Type.INVOICE_ACK, resp.getType());
+        int saleId = Integer.parseInt(resp.getInfo().replace("sale#", ""));
+
+        ctx.saleService.reject(saleId, 1, "smoke-test reject");
+
+        Part after = ctx.partService.all().stream()
+                .filter(p -> p.getId() == target.getId()).findFirst().orElseThrow();
+        assertEquals(stockBefore, after.getQuantity(),
+                "rejection must leave stock unchanged");
+    }
+
+    @Test @Order(5)
     void purchaseIncrementsStock() {
         Part target = ctx.partService.all().get(0);
         int before = target.getQuantity();
@@ -100,7 +133,7 @@ class IntegrationSmokeTest {
         assertEquals(before + 5, after.getQuantity(), "stock must increment by 5");
     }
 
-    @Test @Order(5)
+    @Test @Order(6)
     void reportsQueries() {
         assertDoesNotThrow(() -> ctx.saleService.totalSalesLast30Days());
         assertDoesNotThrow(() -> ctx.saleService.totalProfitLast30Days());
@@ -111,7 +144,7 @@ class IntegrationSmokeTest {
         assertFalse(top.isEmpty(), "topSelling must return at least one row");
     }
 
-    @Test @Order(6)
+    @Test @Order(7)
     void lowStockMonitor() {
         List<Part> low = ctx.partService.lowStock();
         assertNotNull(low);
@@ -119,7 +152,7 @@ class IntegrationSmokeTest {
         System.out.println("[smoke] low-stock parts: " + low.size());
     }
 
-    @Test @Order(7)
+    @Test @Order(8)
     void authServiceWorks() {
         assertTrue(ctx.authService.login("admin", "admin123").isOk());
         assertTrue(ctx.authService.login("employee", "emp123").isOk());
