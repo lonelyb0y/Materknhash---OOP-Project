@@ -26,4 +26,29 @@ public class UserService {
         u.setActive(!u.isActive());
         return dao.update(u);
     }
+
+    /** Sellers awaiting admin sign-off, oldest first. */
+    public List<User> listPendingSellers() {
+        return dao.findAll().stream()
+                .filter(u -> u.getRole() == Role.SELLER && u.getStatus() == User.Status.PENDING_APPROVAL)
+                .toList();
+    }
+
+    /** Flip a PENDING seller to ACTIVE so they can log in and start listing. */
+    public boolean approveSeller(int sellerId) {
+        return dao.findById(sellerId).map(u -> {
+            u.setStatus(User.Status.ACTIVE);
+            u.setActive(true);
+            return dao.update(u);
+        }).orElse(false);
+    }
+
+    /** Refuse a seller application -- keeps the username reserved but blocks login. */
+    public boolean rejectSeller(int sellerId) {
+        return dao.findById(sellerId).map(u -> {
+            u.setStatus(User.Status.SUSPENDED);
+            u.setActive(false);
+            return dao.update(u);
+        }).orElse(false);
+    }
 }

@@ -27,8 +27,9 @@
             <Button fx:id="navPurchases" text="📦   Purchases"   styleClass="nav-item" onAction="#showPurchases"/>
             <Button fx:id="navSuppliers" text="🏭   Suppliers"   styleClass="nav-item" onAction="#showSuppliers"/>
             <Button fx:id="navReports"   text="📊   Reports"     styleClass="nav-item" onAction="#showReports"/>
-            <Button fx:id="navUsers"     text="👥   Users"       styleClass="nav-item" onAction="#showUsers"/>
-            <Button fx:id="navSettings"  text="⚙   Settings"    styleClass="nav-item" onAction="#showSettings"/>
+            <Button fx:id="navUsers"          text="👥   Users"             styleClass="nav-item" onAction="#showUsers"/>
+            <Button fx:id="navPendingSellers" text="🪪   Pending Sellers"   styleClass="nav-item" onAction="#showPendingSellers"/>
+            <Button fx:id="navSettings"       text="⚙   Settings"          styleClass="nav-item" onAction="#showSettings"/>
 
             <Region VBox.vgrow="ALWAYS"/>
 

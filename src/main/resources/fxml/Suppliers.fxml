@@ -14,6 +14,7 @@
         <Label text="Phone"/><TextField fx:id="phoneField"/>
         <Label text="Email"/><TextField fx:id="emailField"/>
         <Label text="Address"/><TextField fx:id="addressField"/>
+        <CheckBox fx:id="trustedBox" text="★ Trusted supplier (admin-vetted)"/>
         <Label fx:id="formError" styleClass="error-label" managed="false" visible="false"/>
         <HBox spacing="8">
             <padding><Insets top="6"/></padding>
@@ -32,6 +33,7 @@
                 <TableColumn fx:id="colPhone"   text="Phone"   prefWidth="130"/>
                 <TableColumn fx:id="colEmail"   text="Email"   prefWidth="180"/>
                 <TableColumn fx:id="colAddress" text="Address" prefWidth="180"/>
+                <TableColumn fx:id="colTrusted" text="Trusted" prefWidth="80"/>
                 <TableColumn fx:id="colAct"     text="Actions" prefWidth="100"/>
             </columns>
         </TableView>

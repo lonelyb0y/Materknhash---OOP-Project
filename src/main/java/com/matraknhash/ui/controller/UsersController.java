@@ -29,13 +29,21 @@ public class UsersController {
 
     @FXML
     public void initialize() {
-        roleCombo.setItems(FXCollections.observableArrayList("Admin", "Employee", "Seller"));
+        roleCombo.setItems(FXCollections.observableArrayList("Admin", "Employee", "Seller", "Customer"));
 
         colId.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getId()));
         colUser.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getUsername()));
         colName.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getFullName()));
         colRole.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getRole().name()));
-        colState.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().isActive() ? "Active" : "Inactive"));
+        colState.setCellValueFactory(c -> {
+            User u = c.getValue();
+            if (!u.isActive()) return new SimpleStringProperty("Inactive");
+            return new SimpleStringProperty(switch (u.getStatus()) {
+                case ACTIVE           -> "Active";
+                case PENDING_APPROVAL -> "Pending";
+                case SUSPENDED        -> "Suspended";
+            });
+        });
 
         colAct.setCellFactory(col -> new TableCell<>() {
             private final Button toggle = new Button("toggle");

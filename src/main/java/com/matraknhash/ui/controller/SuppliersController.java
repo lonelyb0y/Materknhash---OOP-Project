@@ -15,10 +15,11 @@ import java.util.Optional;
 public class SuppliersController {
 
     @FXML private TextField nameField, phoneField, emailField, addressField;
+    @FXML private CheckBox  trustedBox;
     @FXML private Label formError;
     @FXML private TableView<Supplier> table;
     @FXML private TableColumn<Supplier, Number> colId;
-    @FXML private TableColumn<Supplier, String> colName, colPhone, colEmail, colAddress;
+    @FXML private TableColumn<Supplier, String> colName, colPhone, colEmail, colAddress, colTrusted;
     @FXML private TableColumn<Supplier, Void>   colAct;
 
     private final ObservableList<Supplier> items = FXCollections.observableArrayList();
@@ -31,6 +32,7 @@ public class SuppliersController {
         colPhone.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getPhone()));
         colEmail.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getEmail()));
         colAddress.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getAddress()));
+        colTrusted.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().isTrusted() ? "★ Yes" : "—"));
         colAct.setCellFactory(col -> new TableCell<>() {
             private final Button edit = new Button("✎");
             private final Button del  = new Button("🗑");
@@ -55,6 +57,7 @@ public class SuppliersController {
         phoneField.setText(s.getPhone());
         emailField.setText(s.getEmail());
         addressField.setText(s.getAddress());
+        trustedBox.setSelected(s.isTrusted());
     }
 
     private void delete(Supplier s) {
@@ -69,6 +72,7 @@ public class SuppliersController {
     @FXML private void onClear() {
         editing = null;
         nameField.clear(); phoneField.clear(); emailField.clear(); addressField.clear();
+        trustedBox.setSelected(false);
         formError.setVisible(false); formError.setManaged(false);
     }
 
@@ -80,6 +84,7 @@ public class SuppliersController {
             s.setPhone(phoneField.getText().trim());
             s.setEmail(emailField.getText().trim());
             s.setAddress(addressField.getText().trim());
+            s.setTrusted(trustedBox.isSelected());
             AppContext.get().supplierService.save(s);
             onClear();
             reload();

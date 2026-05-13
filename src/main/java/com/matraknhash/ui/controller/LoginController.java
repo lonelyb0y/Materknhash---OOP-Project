@@ -43,4 +43,13 @@ public class LoginController {
         errorLabel.setVisible(false);
         errorLabel.setManaged(false);
     }
+
+    @FXML
+    private void onSignup() {
+        try {
+            Main.setRoot("Signup.fxml", "Metrkansh ERP - Sign up");
+        } catch (Exception e) {
+            showError("Failed to open signup: " + e.getMessage());
+        }
+    }
 }

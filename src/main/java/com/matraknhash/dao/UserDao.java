@@ -14,11 +14,11 @@ public class UserDao extends BaseDao<User> {
     @Override protected String table() { return "users"; }
 
     @Override protected String[] columns() {
-        return new String[]{"username","password_hash","full_name","role","active"};
+        return new String[]{"username","password_hash","full_name","role","active","status"};
     }
 
     @Override protected User extract(ResultSet rs) throws SQLException {
-        return User.from(
+        User u = User.from(
                 rs.getInt("id"),
                 rs.getString("username"),
                 rs.getString("password_hash"),
@@ -26,6 +26,13 @@ public class UserDao extends BaseDao<User> {
                 Role.of(rs.getString("role")),
                 rs.getInt("active") == 1
         );
+        // Account-status column was added in M1; tolerate older rows.
+        String st = rs.getString("status");
+        if (st != null && !st.isBlank()) {
+            try { u.setStatus(User.Status.valueOf(st)); }
+            catch (IllegalArgumentException ignore) { /* leave default ACTIVE */ }
+        }
+        return u;
     }
 
     @Override protected void bindInsert(PreparedStatement ps, User u) throws SQLException {
@@ -34,11 +41,12 @@ public class UserDao extends BaseDao<User> {
         ps.setString(3, u.getFullName());
         ps.setString(4, u.getRole().name());
         ps.setInt(5, u.isActive() ? 1 : 0);
+        ps.setString(6, (u.getStatus() == null ? User.Status.ACTIVE : u.getStatus()).name());
     }
 
     @Override protected void bindUpdate(PreparedStatement ps, User u) throws SQLException {
         bindInsert(ps, u);
-        ps.setInt(6, u.getId());
+        ps.setInt(7, u.getId());
     }
 
     @Override protected int idOf(User u) { return u.getId(); }

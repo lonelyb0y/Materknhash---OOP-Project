@@ -22,7 +22,7 @@ public class MainShellController {
     @FXML private Label roleLabel;
 
     @FXML private Button navDashboard, navParts, navSales, navPending, navPurchases,
-            navSuppliers, navReports, navUsers, navSettings;
+            navSuppliers, navReports, navUsers, navPendingSellers, navSettings;
 
     private final List<Button> navItems = java.util.List.of();
     private Button activeButton;
@@ -40,18 +40,26 @@ public class MainShellController {
     }
 
     private void applyRoleVisibility(Role role) {
-        // Sellers only see Dashboard + Sales (their own POS).
-        // Admin + Employee handle everything else — including approving invoices.
-        boolean isSeller = role == Role.SELLER;
-        boolean isAdmin  = role == Role.ADMIN;
+        // Customer  -> Dashboard + (future) Catalog + (future) My Orders.
+        // Seller    -> Dashboard + Sales POS + (future) My Listings + My Incoming Orders.
+        // Employee  -> everything operational, no admin-only screens.
+        // Admin     -> everything.
+        boolean isCustomer = role == Role.CUSTOMER;
+        boolean isSeller   = role == Role.SELLER;
+        boolean isStaff    = role == Role.ADMIN || role == Role.EMPLOYEE;
+        boolean isAdmin    = role == Role.ADMIN;
 
-        toggle(navParts,     !isSeller);
-        toggle(navPending,   !isSeller);   // approval queue: ADMIN + EMPLOYEE
-        toggle(navPurchases, !isSeller);
-        toggle(navSuppliers, !isSeller);
-        toggle(navReports,   !isSeller);
-        toggle(navUsers,     isAdmin);
-        toggle(navSettings,  isAdmin);
+        // Sales POS is staff or seller (sellers still need to submit invoices until
+        // the new marketplace order screens land in M4).
+        toggle(navSales,          !isCustomer);
+        toggle(navParts,          isStaff);
+        toggle(navPending,        isStaff);            // invoice approval queue
+        toggle(navPurchases,      isStaff);
+        toggle(navSuppliers,      isStaff);
+        toggle(navReports,        isStaff);
+        toggle(navUsers,          isAdmin);
+        toggle(navPendingSellers, isAdmin);            // seller-account approval queue
+        toggle(navSettings,       isAdmin);
     }
 
     private void toggle(Button b, boolean show) {
@@ -66,8 +74,9 @@ public class MainShellController {
     @FXML private void showPurchases() { swap("Purchases.fxml", "Purchases", navPurchases); }
     @FXML private void showSuppliers() { swap("Suppliers.fxml", "Suppliers", navSuppliers); }
     @FXML private void showReports()   { swap("Reports.fxml",   "Reports & Analytics", navReports); }
-    @FXML private void showUsers()     { swap("Users.fxml",     "User Management", navUsers); }
-    @FXML private void showSettings()  { swap("Settings.fxml",  "Settings", navSettings); }
+    @FXML private void showUsers()          { swap("Users.fxml",          "User Management",   navUsers); }
+    @FXML private void showPendingSellers() { swap("PendingSellers.fxml", "Pending Sellers",   navPendingSellers); }
+    @FXML private void showSettings()       { swap("Settings.fxml",       "Settings",          navSettings); }
 
     @FXML
     private void onLogout() {
