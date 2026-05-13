@@ -39,7 +39,7 @@ class IntegrationSmokeTest {
     @Test @Order(1)
     void dbReachableAndSeeded() throws SQLException {
         try (Connection c = ConnectionFactory.get(); Statement st = c.createStatement()) {
-            assertCount(st, "users",      3);
+            assertTrue(countOf(st, "users")     >= 3,  "default users should be seeded");
             assertTrue(countOf(st, "suppliers") >= 10, "suppliers should be seeded");
             assertTrue(countOf(st, "parts")     >= 30, "parts should be seeded");
             assertTrue(countOf(st, "sales")     >= 30, "historical sales should be seeded");

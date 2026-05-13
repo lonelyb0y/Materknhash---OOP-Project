@@ -30,10 +30,11 @@ public final class DatabaseBootstrap {
 
     public static void run() throws SQLException, IOException {
         ensureDatabase();
-        Connection c = ConnectionFactory.get();
-        applySql(c, SCHEMA);
-        ensureDefaultUsers(c);
-        applySql(c, SEED);
+        try (Connection c = ConnectionFactory.get()) {
+            applySql(c, SCHEMA);
+            ensureDefaultUsers(c);
+            applySql(c, SEED);
+        }
     }
 
     /** Make sure the target database exists on the server before we connect to it. */

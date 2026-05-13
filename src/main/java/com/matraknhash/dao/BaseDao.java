@@ -41,7 +41,8 @@ public abstract class BaseDao<T> {
 
     public Optional<T> findById(int id) {
         String sql = "SELECT * FROM " + table() + " WHERE id = ?";
-        try (PreparedStatement ps = conn().prepareStatement(sql)) {
+        try (Connection c = conn();
+             PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? Optional.of(extract(rs)) : Optional.empty();
@@ -54,7 +55,8 @@ public abstract class BaseDao<T> {
     public List<T> findAll() {
         String sql = "SELECT * FROM " + table();
         List<T> out = new ArrayList<>();
-        try (PreparedStatement ps = conn().prepareStatement(sql);
+        try (Connection c = conn();
+             PreparedStatement ps = c.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) out.add(extract(rs));
         } catch (SQLException e) {
@@ -68,7 +70,8 @@ public abstract class BaseDao<T> {
         String qs = "?,".repeat(columns().length);
         qs = qs.substring(0, qs.length() - 1);
         String sql = "INSERT INTO " + table() + "(" + cols + ") VALUES (" + qs + ")";
-        try (PreparedStatement ps = conn().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection c = conn();
+             PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             bindInsert(ps, entity);
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -87,7 +90,8 @@ public abstract class BaseDao<T> {
             if (i < columns().length - 1) sb.append(", ");
         }
         sb.append(" WHERE id = ?");
-        try (PreparedStatement ps = conn().prepareStatement(sb.toString())) {
+        try (Connection c = conn();
+             PreparedStatement ps = c.prepareStatement(sb.toString())) {
             bindUpdate(ps, entity);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -97,7 +101,8 @@ public abstract class BaseDao<T> {
 
     public boolean delete(int id) {
         String sql = "DELETE FROM " + table() + " WHERE id = ?";
-        try (PreparedStatement ps = conn().prepareStatement(sql)) {
+        try (Connection c = conn();
+             PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, id);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {

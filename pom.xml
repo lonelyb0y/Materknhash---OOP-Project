@@ -19,6 +19,8 @@
         <fxgl.version>17.3</fxgl.version>
         <mysql.version>8.3.0</mysql.version>
         <bcrypt.version>0.10.2</bcrypt.version>
+        <hikari.version>5.1.0</hikari.version>
+        <slf4j.version>2.0.13</slf4j.version>
         <junit.version>5.10.2</junit.version>
         <mainClass>com.matraknhash.app.Main</mainClass>
     </properties>
@@ -62,6 +64,20 @@
             <groupId>at.favre.lib</groupId>
             <artifactId>bcrypt</artifactId>
             <version>${bcrypt.version}</version>
+        </dependency>
+
+        <!-- High-performance JDBC connection pool. Without this, every borrowed
+             connection re-handshakes TLS against Railway which adds 200-500ms
+             of latency to every UI action. -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>${hikari.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
 
         <dependency>

@@ -160,7 +160,8 @@ public class SaleDao {
                      "LEFT JOIN users au ON au.id = s.approver_id " +
                      "WHERE s.status = ? ORDER BY s.created_at DESC, s.id DESC";
         List<Sale> out = new ArrayList<>();
-        try (PreparedStatement ps = c().prepareStatement(sql)) {
+        try (Connection c = c();
+             PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, status.name());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -198,7 +199,8 @@ public class SaleDao {
                      "LEFT JOIN parts p ON p.id = si.part_id " +
                      "WHERE si.sale_id = ? ORDER BY si.id";
         List<SaleItem> out = new ArrayList<>();
-        try (PreparedStatement ps = c().prepareStatement(sql)) {
+        try (Connection c = c();
+             PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, saleId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -220,7 +222,8 @@ public class SaleDao {
     }
 
     public int countPending() {
-        try (PreparedStatement ps = c().prepareStatement(
+        try (Connection c = c();
+             PreparedStatement ps = c.prepareStatement(
                 "SELECT COUNT(*) FROM sales WHERE status='PENDING'");
              ResultSet rs = ps.executeQuery()) {
             return rs.next() ? rs.getInt(1) : 0;
@@ -229,7 +232,8 @@ public class SaleDao {
 
     public double totalSalesSince(LocalDateTime since) {
         String sql = "SELECT COALESCE(SUM(total),0) FROM sales WHERE status='APPROVED' AND created_at >= ?";
-        try (PreparedStatement ps = c().prepareStatement(sql)) {
+        try (Connection c = c();
+             PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, since.format(TS));
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? rs.getDouble(1) : 0;
@@ -244,7 +248,8 @@ public class SaleDao {
                      "FROM sale_items si JOIN parts p ON p.id = si.part_id " +
                      "JOIN sales s ON s.id = si.sale_id " +
                      "WHERE s.status='APPROVED' AND s.created_at >= ?";
-        try (PreparedStatement ps = c().prepareStatement(sql)) {
+        try (Connection c = c();
+             PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, since.format(TS));
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? rs.getDouble(1) : 0;
@@ -260,7 +265,8 @@ public class SaleDao {
                      "WHERE status='APPROVED' AND created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) " +
                      "GROUP BY d ORDER BY d";
         Map<String, Double> out = new LinkedHashMap<>();
-        try (PreparedStatement ps = c().prepareStatement(sql)) {
+        try (Connection c = c();
+             PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, days);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) out.put(rs.getString("d"), rs.getDouble("t"));
@@ -279,7 +285,8 @@ public class SaleDao {
                      "WHERE s.status='APPROVED' " +
                      "GROUP BY si.part_id ORDER BY q DESC LIMIT ?";
         List<Object[]> out = new ArrayList<>();
-        try (PreparedStatement ps = c().prepareStatement(sql)) {
+        try (Connection c = c();
+             PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, limit);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) out.add(new Object[]{rs.getString(1), rs.getInt(2)});
@@ -291,7 +298,8 @@ public class SaleDao {
     }
 
     public int countAll() {
-        try (PreparedStatement ps = c().prepareStatement("SELECT COUNT(*) FROM sales");
+        try (Connection c = c();
+             PreparedStatement ps = c.prepareStatement("SELECT COUNT(*) FROM sales");
              ResultSet rs = ps.executeQuery()) {
             return rs.next() ? rs.getInt(1) : 0;
         } catch (SQLException e) { throw new DaoException("countAll sales failed", e); }

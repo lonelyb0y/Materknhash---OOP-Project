@@ -40,6 +40,7 @@ public class Main extends Application {
     private void shutdown() {
         try { AppContext.get().stockMonitor.stop(); } catch (Exception ignore) {}
         try { AppContext.get().invoiceServer.stop(); } catch (Exception ignore) {}
+        try { com.matraknhash.db.ConnectionFactory.shutdown(); } catch (Exception ignore) {}
     }
 
     public static void main(String[] args) {

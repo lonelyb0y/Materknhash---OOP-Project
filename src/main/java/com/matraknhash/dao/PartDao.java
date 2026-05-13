@@ -2,6 +2,7 @@ package com.matraknhash.dao;
 
 import com.matraknhash.model.Part;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -58,7 +59,8 @@ public class PartDao extends BaseDao<Part> {
     public List<Part> findLowStock() {
         String sql = "SELECT * FROM parts WHERE quantity <= min_qty ORDER BY quantity ASC";
         List<Part> out = new ArrayList<>();
-        try (PreparedStatement ps = conn().prepareStatement(sql);
+        try (Connection c = conn();
+             PreparedStatement ps = c.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) out.add(extract(rs));
         } catch (SQLException e) {
@@ -71,7 +73,8 @@ public class PartDao extends BaseDao<Part> {
         String sql = "SELECT * FROM parts WHERE sku LIKE ? OR name LIKE ? ORDER BY name";
         List<Part> out = new ArrayList<>();
         String like = "%" + term + "%";
-        try (PreparedStatement ps = conn().prepareStatement(sql)) {
+        try (Connection c = conn();
+             PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, like);
             ps.setString(2, like);
             try (ResultSet rs = ps.executeQuery()) {
@@ -84,7 +87,8 @@ public class PartDao extends BaseDao<Part> {
     }
 
     public int countAll() {
-        try (PreparedStatement ps = conn().prepareStatement("SELECT COUNT(*) FROM parts");
+        try (Connection c = conn();
+             PreparedStatement ps = c.prepareStatement("SELECT COUNT(*) FROM parts");
              ResultSet rs = ps.executeQuery()) {
             return rs.next() ? rs.getInt(1) : 0;
         } catch (SQLException e) {
@@ -95,7 +99,8 @@ public class PartDao extends BaseDao<Part> {
     /** Atomically decrement stock. Returns true if stock was sufficient. */
     public boolean decrementStock(int partId, int qty) {
         String sql = "UPDATE parts SET quantity = quantity - ? WHERE id = ? AND quantity >= ?";
-        try (PreparedStatement ps = conn().prepareStatement(sql)) {
+        try (Connection c = conn();
+             PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, qty);
             ps.setInt(2, partId);
             ps.setInt(3, qty);
@@ -106,7 +111,8 @@ public class PartDao extends BaseDao<Part> {
     }
 
     public void incrementStock(int partId, int qty) {
-        try (PreparedStatement ps = conn().prepareStatement(
+        try (Connection c = conn();
+             PreparedStatement ps = c.prepareStatement(
                 "UPDATE parts SET quantity = quantity + ? WHERE id = ?")) {
             ps.setInt(1, qty);
             ps.setInt(2, partId);

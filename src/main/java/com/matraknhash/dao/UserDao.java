@@ -3,6 +3,7 @@ package com.matraknhash.dao;
 import com.matraknhash.model.Role;
 import com.matraknhash.model.User;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -45,7 +46,8 @@ public class UserDao extends BaseDao<User> {
 
     public Optional<User> findByUsername(String username) {
         String sql = "SELECT * FROM users WHERE username = ?";
-        try (PreparedStatement ps = conn().prepareStatement(sql)) {
+        try (Connection c = conn();
+             PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, username);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? Optional.of(extract(rs)) : Optional.empty();

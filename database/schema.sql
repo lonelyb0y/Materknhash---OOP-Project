@@ -96,5 +96,9 @@ CREATE TABLE IF NOT EXISTS purchase_items (
 
 CREATE INDEX idx_parts_sku        ON parts(sku);
 CREATE INDEX idx_parts_name       ON parts(name);
+CREATE INDEX idx_parts_qty        ON parts(quantity);
 CREATE INDEX idx_sales_created    ON sales(created_at);
+CREATE INDEX idx_sales_status     ON sales(status);
+CREATE INDEX idx_sales_status_ts  ON sales(status, created_at);
 CREATE INDEX idx_sale_items_sale  ON sale_items(sale_id);
+CREATE INDEX idx_sale_items_part  ON sale_items(part_id);

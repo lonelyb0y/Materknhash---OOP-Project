@@ -64,7 +64,8 @@ public class PurchaseDao {
     }
 
     public double totalPurchasesAllTime() {
-        try (PreparedStatement ps = c().prepareStatement("SELECT COALESCE(SUM(total),0) FROM purchases");
+        try (Connection c = c();
+             PreparedStatement ps = c.prepareStatement("SELECT COALESCE(SUM(total),0) FROM purchases");
              ResultSet rs = ps.executeQuery()) {
             return rs.next() ? rs.getDouble(1) : 0;
         } catch (SQLException e) {
