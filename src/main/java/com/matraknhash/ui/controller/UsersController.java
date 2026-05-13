@@ -29,7 +29,7 @@ public class UsersController {
 
     @FXML
     public void initialize() {
-        roleCombo.setItems(FXCollections.observableArrayList("Admin", "Employee", "Seller", "Customer"));
+        roleCombo.setItems(FXCollections.observableArrayList("Admin", "Employee", "Seller", "Customer", "Service_Center"));
 
         colId.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getId()));
         colUser.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getUsername()));
@@ -58,11 +58,40 @@ public class UsersController {
                 });
                 del.setOnAction(e -> {
                     User u = getTableView().getItems().get(getIndex());
-                    Alert a = new Alert(Alert.AlertType.CONFIRMATION, "Delete user \"" + u.getUsername() + "\"?", ButtonType.OK, ButtonType.CANCEL);
+
+                    ButtonType bPurge   = new ButtonType("Delete user + their listings");
+                    ButtonType bSuspend = new ButtonType("Suspend account only");
+                    ButtonType bCancel  = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+                    Alert a = new Alert(Alert.AlertType.CONFIRMATION,
+                            "Delete \"" + u.getUsername() + "\"?\n\n" +
+                            "• Delete user + their listings: removes the account, all their parts/listings,\n" +
+                            "   service offers, and notifications. Orders that already happened will block this.\n" +
+                            "• Suspend account only: keeps history; user can no longer log in.",
+                            bPurge, bSuspend, bCancel);
+                    a.setHeaderText("Remove user");
+                    a.getDialogPane().setMinWidth(560);
                     Optional<ButtonType> r = a.showAndWait();
-                    if (r.isPresent() && r.get() == ButtonType.OK) {
-                        AppContext.get().userService.delete(u.getId());
+                    if (r.isEmpty() || r.get() == bCancel) return;
+
+                    if (r.get() == bSuspend) {
+                        AppContext.get().userService.deactivate(u.getId());
                         reload();
+                        return;
+                    }
+                    // Purge path
+                    try {
+                        AppContext.get().userService.purgeUser(u.getId());
+                        reload();
+                    } catch (RuntimeException ex) {
+                        Alert err = new Alert(Alert.AlertType.WARNING,
+                                "Cannot fully delete this user: their listings are referenced by existing orders.\n\n" +
+                                "Suspend the account instead?",
+                                ButtonType.OK, ButtonType.CANCEL);
+                        err.setHeaderText("Active orders reference this user");
+                        if (err.showAndWait().filter(b -> b == ButtonType.OK).isPresent()) {
+                            AppContext.get().userService.deactivate(u.getId());
+                            reload();
+                        }
                     }
                 });
             }
