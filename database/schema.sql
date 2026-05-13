@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS suppliers (
     phone      VARCHAR(40),
     email      VARCHAR(120),
     address    VARCHAR(200),
+    trusted    TINYINT      NOT NULL DEFAULT 0,
     created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -116,6 +117,14 @@ CREATE INDEX idx_sale_items_part  ON sale_items(part_id);
 
 -- The role check stops us from inserting CUSTOMER; widen the column instead.
 ALTER TABLE users DROP CHECK chk_users_role;
+
+-- Suppliers gain a "trusted" flag. Listings sourced from a trusted supplier
+-- skip the employee/admin review and go straight to LIVE (logic added in M3);
+-- right now this is just the storage + an admin-visible badge.
+ALTER TABLE suppliers ADD COLUMN trusted TINYINT NOT NULL DEFAULT 0;
+-- Out of the box we vouch for the five household-name brands seeded in seed.sql.
+UPDATE suppliers SET trusted = 1
+  WHERE name IN ('Bosch Egypt','Denso Distributors','NGK Spark Plugs Egypt','Mahle Filters','Brembo Brakes');
 
 ALTER TABLE users ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE';
 -- Anyone in the table when we migrate is treated as fully active.
