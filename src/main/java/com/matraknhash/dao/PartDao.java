@@ -180,29 +180,4 @@ public class PartDao extends BaseDao<Part> {
         }
     }
 
-    /** Atomically decrement stock. Returns true if stock was sufficient. */
-    public boolean decrementStock(int partId, int qty) {
-        String sql = "UPDATE parts SET quantity = quantity - ? WHERE id = ? AND quantity >= ?";
-        try (Connection c = conn();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, qty);
-            ps.setInt(2, partId);
-            ps.setInt(3, qty);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            throw new DaoException("decrementStock failed", e);
-        }
-    }
-
-    public void incrementStock(int partId, int qty) {
-        try (Connection c = conn();
-             PreparedStatement ps = c.prepareStatement(
-                "UPDATE parts SET quantity = quantity + ? WHERE id = ?")) {
-            ps.setInt(1, qty);
-            ps.setInt(2, partId);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new DaoException("incrementStock failed", e);
-        }
-    }
 }

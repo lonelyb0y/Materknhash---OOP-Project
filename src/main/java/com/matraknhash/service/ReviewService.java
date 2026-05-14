@@ -3,8 +3,6 @@ package com.matraknhash.service;
 import com.matraknhash.dao.ReviewDao;
 import com.matraknhash.model.Review;
 
-import java.util.List;
-
 /** Service facade for seller reviews. */
 public class ReviewService {
 
@@ -19,7 +17,6 @@ public class ReviewService {
     }
 
     public Review findBySale(int saleId)               { return dao.findBySale(saleId); }
-    public List<Review> reviewsForSeller(int sellerId)  { return dao.findBySeller(sellerId); }
     public double averageRating(int sellerId)           { return dao.averageRating(sellerId); }
     public int countBySeller(int sellerId)              { return dao.countBySeller(sellerId); }
 }

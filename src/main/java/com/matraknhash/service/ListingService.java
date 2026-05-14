@@ -6,7 +6,6 @@ import com.matraknhash.model.Part;
 import com.matraknhash.model.Supplier;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Listing approval pipeline (M3).
@@ -50,13 +49,6 @@ public class ListingService {
         return partDao.insert(p);
     }
 
-    /** Seller can also save a draft to come back to later. */
-    public Part saveDraft(Part p, int sellerId) {
-        p.setSellerId(sellerId);
-        p.setListingStatus(Part.ListingStatus.DRAFT);
-        return partDao.insert(p);
-    }
-
     public boolean employeeApprove(int partId, int employeeId) {
         return partDao.findById(partId).map(p -> {
             if (p.getListingStatus() != Part.ListingStatus.PENDING_EMPLOYEE) return false;
@@ -97,20 +89,10 @@ public class ListingService {
         }).orElse(false);
     }
 
-    /** Hide a LIVE listing without deleting (e.g. seller pauses sales). */
-    public boolean hide(int partId) {
-        return partDao.findById(partId).map(p -> {
-            if (p.getListingStatus() != Part.ListingStatus.LIVE) return false;
-            p.setListingStatus(Part.ListingStatus.HIDDEN);
-            return partDao.update(p);
-        }).orElse(false);
-    }
-
     public List<Part> liveCatalog()       { return partDao.findLive(); }
     public List<Part> bySeller(int sid)   { return partDao.findBySeller(sid); }
     public List<Part> pendingEmployee()   { return partDao.findByListingStatus(Part.ListingStatus.PENDING_EMPLOYEE); }
     public List<Part> pendingAdmin()      { return partDao.findByListingStatus(Part.ListingStatus.PENDING_ADMIN); }
-    public Optional<Part> find(int id)    { return partDao.findById(id); }
 
     private boolean isTrustedSupplier(Integer supplierId) {
         if (supplierId == null) return false;
