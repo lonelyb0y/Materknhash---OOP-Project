@@ -40,7 +40,23 @@
                         <TableColumn fx:id="colLsub"  text="Subtotal" prefWidth="100"/>
                     </columns>
                 </TableView>
+
                 <Label fx:id="detailFooter" text="" styleClass="muted" wrapText="true"/>
+
+                <!-- Return section -->
+                <VBox fx:id="returnBox" spacing="6" managed="false" visible="false">
+                    <Label text="Return reason:" styleClass="muted"/>
+                    <TextArea fx:id="returnReason" prefRowCount="2" promptText="Why are you returning this order?"/>
+                </VBox>
+
+                <HBox spacing="10" alignment="CENTER_RIGHT">
+                    <Button fx:id="btnReturn" text="📦  Request Return" onAction="#onRequestReturn"
+                            styleClass="btn-danger" disable="true"/>
+                    <Button fx:id="btnRate" text="⭐  Rate Seller" onAction="#onRateSeller"
+                            styleClass="btn-primary" disable="true"/>
+                </HBox>
+
+                <Label fx:id="status" wrapText="true" styleClass="muted"/>
             </VBox>
         </items>
     </SplitPane>
