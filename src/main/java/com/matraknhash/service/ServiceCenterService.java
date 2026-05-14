@@ -28,6 +28,14 @@ public class ServiceCenterService {
     public List<ServiceOffer> pendingOffers()                { return dao.offersByStatus(ServiceOffer.Status.PENDING_ADMIN); }
     public boolean approveOffer(int id)                      { return dao.updateOfferStatus(id, ServiceOffer.Status.LIVE, null); }
     public boolean rejectOffer(int id, String reason)        { return dao.updateOfferStatus(id, ServiceOffer.Status.REJECTED, reason); }
+    public boolean updateOffer(ServiceOffer o)               { return dao.updateOffer(o); }
+    public boolean deleteOffer(int id)                       { return dao.deleteOffer(id); }
+
+    public double totalRevenueLast30Days(int centerId)       { return dao.totalRevenueSince(centerId, java.time.LocalDateTime.now().minusDays(30)); }
+    public int countActiveBookings(int centerId)             { return dao.countActiveBookings(centerId); }
+    public int countOffers(int centerId)                     { return dao.countOffers(centerId); }
+    public java.util.Map<String, Double> dailyRevenue(int centerId, int days) { return dao.dailyRevenue(centerId, days); }
+    public java.util.List<Object[]> topCentersByBookings(int limit) { return dao.topCentersByBookings(limit); }
 
     // --- requests ---------------------------------------------------------
     public ServiceRequest requestService(int customerId, int offerId, String vehicleNote) {

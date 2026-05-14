@@ -19,6 +19,8 @@ public class MyServiceOffersController {
     @FXML private TextField title, price;
     @FXML private TextArea  desc;
     @FXML private Label status;
+    @FXML private Button btnSubmit, btnUpdate, btnDelete;
+    private ServiceOffer selectedOffer;
 
     @FXML private TableView<ServiceOffer> table;
     @FXML private TableColumn<ServiceOffer, String> colId, colTitle, colStatus, colReason;
@@ -47,7 +49,29 @@ public class MyServiceOffersController {
                 c.getValue().getReason() == null ? "" : c.getValue().getReason()));
 
         table.setItems(rows);
+        table.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> selectItem(newV));
         refresh();
+    }
+
+    private void selectItem(ServiceOffer o) {
+        selectedOffer = o;
+        boolean selected = (o != null);
+        if (btnSubmit != null) btnSubmit.setDisable(selected);
+        if (btnUpdate != null) btnUpdate.setDisable(!selected);
+        if (btnDelete != null) btnDelete.setDisable(!selected);
+
+        if (selected) {
+            title.setText(o.getTitle());
+            price.setText(String.valueOf(o.getPrice()));
+            desc.setText(o.getDescription());
+        }
+    }
+
+    @FXML
+    private void onClear() {
+        title.clear(); price.clear(); desc.clear();
+        status.setText("");
+        selectItem(null);
     }
 
     private void refresh() {
@@ -65,12 +89,40 @@ public class MyServiceOffersController {
             AppContext.get().serviceCenterService.submitOffer(
                     me.getId(), title.getText().trim(), desc.getText(), p);
             status.setText("Submitted '" + title.getText().trim() + "' — admin review pending.");
-            title.clear(); price.clear(); desc.clear();
+            onClear();
             refresh();
         } catch (NumberFormatException ex) {
             status.setText("Price must be a number.");
         } catch (Exception ex) {
             status.setText("Submission failed: " + ex.getMessage());
         }
+    }
+
+    @FXML
+    private void onUpdate() {
+        if (selectedOffer == null) return;
+        try {
+            double p = Double.parseDouble(price.getText().trim());
+            selectedOffer.setTitle(title.getText().trim());
+            selectedOffer.setPrice(p);
+            selectedOffer.setDescription(desc.getText());
+            AppContext.get().serviceCenterService.updateOffer(selectedOffer);
+            status.setText("Offer updated successfully.");
+            onClear();
+            refresh();
+        } catch (NumberFormatException ex) {
+            status.setText("Price must be a number.");
+        } catch (Exception ex) {
+            status.setText("Update failed: " + ex.getMessage());
+        }
+    }
+
+    @FXML
+    private void onDelete() {
+        if (selectedOffer == null) return;
+        AppContext.get().serviceCenterService.deleteOffer(selectedOffer.getId());
+        status.setText("Offer deleted.");
+        onClear();
+        refresh();
     }
 }
