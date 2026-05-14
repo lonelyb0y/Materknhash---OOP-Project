@@ -24,6 +24,8 @@ public class MyListingsController {
     @FXML private TextField skuField, nameField, categoryField, makeField, modelField, priceField, qtyField;
     @FXML private ComboBox<Supplier> supplierCombo;
     @FXML private Label formError, formInfo;
+    @FXML private Button btnSubmit, btnUpdate, btnDelete;
+    private Part selectedPart;
 
     @FXML private TableView<Part> table;
     @FXML private TableColumn<Part, Number> colId, colPrice, colQty;
@@ -58,7 +60,32 @@ public class MyListingsController {
         colNote.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getListingReason() == null ? "" : c.getValue().getListingReason()));
 
         table.setItems(items);
+        table.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> selectItem(newV));
         refresh();
+    }
+
+    private void selectItem(Part p) {
+        selectedPart = p;
+        boolean selected = (p != null);
+        btnSubmit.setDisable(selected);
+        btnUpdate.setDisable(!selected);
+        btnDelete.setDisable(!selected);
+
+        if (selected) {
+            skuField.setText(p.getSku());
+            nameField.setText(p.getName());
+            categoryField.setText(p.getCategory());
+            makeField.setText(p.getCarMake());
+            modelField.setText(p.getCarModel());
+            priceField.setText(String.valueOf(p.getSellPrice()));
+            qtyField.setText(String.valueOf(p.getQuantity()));
+            if (p.getSupplierId() != null) {
+                supplierCombo.getItems().stream().filter(s -> s.getId() == p.getSupplierId())
+                        .findFirst().ifPresent(s -> supplierCombo.setValue(s));
+            } else {
+                supplierCombo.setValue(null);
+            }
+        }
     }
 
     @FXML
@@ -77,6 +104,7 @@ public class MyListingsController {
         priceField.clear(); qtyField.clear();
         supplierCombo.setValue(null);
         hideMessages();
+        selectItem(null);
     }
 
     @FXML
@@ -114,6 +142,47 @@ public class MyListingsController {
         } catch (Exception e) {
             showError(e.getMessage());
         }
+    }
+
+    @FXML
+    private void onUpdate() {
+        if (selectedPart == null) return;
+        hideMessages();
+        try {
+            if (skuField.getText().isBlank() || nameField.getText().isBlank())
+                throw new IllegalArgumentException("SKU and Name are required.");
+            double price = Double.parseDouble(priceField.getText().trim());
+            int qty      = Integer.parseInt(qtyField.getText().trim());
+            if (price <= 0 || qty < 0) throw new IllegalArgumentException("Price > 0 and stock >= 0.");
+
+            selectedPart.setSku(skuField.getText().trim());
+            selectedPart.setName(nameField.getText().trim());
+            selectedPart.setCategory(categoryField.getText().trim());
+            selectedPart.setCarMake(makeField.getText().trim());
+            selectedPart.setCarModel(modelField.getText().trim());
+            selectedPart.setSellPrice(price);
+            selectedPart.setQuantity(qty);
+            Supplier sup = supplierCombo.getValue();
+            selectedPart.setSupplierId(sup != null ? sup.getId() : null);
+
+            AppContext.get().partService.save(selectedPart);
+            showInfo("Listing updated successfully.");
+            onClear();
+            refresh();
+        } catch (NumberFormatException e) {
+            showError("Price and stock must be valid numbers.");
+        } catch (Exception e) {
+            showError(e.getMessage());
+        }
+    }
+
+    @FXML
+    private void onDelete() {
+        if (selectedPart == null) return;
+        AppContext.get().partService.delete(selectedPart.getId());
+        showInfo("Listing deleted.");
+        onClear();
+        refresh();
     }
 
     private static String pretty(Part p) {
