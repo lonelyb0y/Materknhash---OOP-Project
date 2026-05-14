@@ -45,8 +45,8 @@ public class MainShellController {
             // Each role lands on the screen most useful to them.
             switch (u.getRole()) {
                 case CUSTOMER       -> showCatalog();
-                case SELLER         -> showMyListings();
-                case SERVICE_CENTER -> showMyOffers();
+                case SELLER         -> showDashboard();
+                case SERVICE_CENTER -> showDashboard();
                 default             -> showDashboard();
             }
         } else {
@@ -68,8 +68,8 @@ public class MainShellController {
         boolean isAdmin    = role == Role.ADMIN;
         boolean isStaff    = isAdmin || isEmployee;
 
-        // Dashboard is a back-office KPI screen, only staff need it.
-        toggle(navDashboard,      isStaff);
+        // Dashboard is a back-office KPI screen for staff, sellers, and centers.
+        toggle(navDashboard,      isStaff || isSeller || isCenter);
 
         // Customer
         toggle(navCatalog,        isCustomer);

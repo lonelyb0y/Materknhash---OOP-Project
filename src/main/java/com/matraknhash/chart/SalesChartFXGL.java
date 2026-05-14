@@ -25,7 +25,9 @@ import java.util.concurrent.Executors;
  */
 public class SalesChartFXGL extends StackPane {
 
-    private final SaleService saleService;
+    private final com.matraknhash.app.AppContext ctx;
+    private final boolean isCenter;
+    private final Integer userId;
     private final LineChart<String, Number> chart;
     private final XYChart.Series<String, Number> series = new XYChart.Series<>();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
@@ -35,8 +37,10 @@ public class SalesChartFXGL extends StackPane {
     });
     private ScheduledFuture<?> task;
 
-    public SalesChartFXGL(SaleService saleService) {
-        this.saleService = saleService;
+    public SalesChartFXGL(com.matraknhash.app.AppContext ctx, boolean isCenter, Integer userId) {
+        this.ctx = ctx;
+        this.isCenter = isCenter;
+        this.userId = userId;
         CategoryAxis x = new CategoryAxis();
         x.setLabel("Date");
         NumberAxis y = new NumberAxis();
@@ -54,10 +58,6 @@ public class SalesChartFXGL extends StackPane {
 
     public void startLiveUpdates(int seconds) {
         if (task != null) return;
-        // Touch FXGL Async to demonstrate FXGL is wired in (the periodic
-        // cadence below uses a JDK scheduler because FXGL's game timer
-        // requires a running GameApplication).
-        Async.INSTANCE.startAsync(() -> {});
         task = scheduler.scheduleAtFixedRate(this::refreshNow, seconds, seconds, TimeUnit.SECONDS);
     }
 
@@ -68,7 +68,12 @@ public class SalesChartFXGL extends StackPane {
 
     private void refreshNow() {
         try {
-            Map<String, Double> daily = saleService.dailyTotals(30);
+            Map<String, Double> daily;
+            if (isCenter) {
+                daily = ctx.serviceCenterService.dailyRevenue(userId, 30);
+            } else {
+                daily = userId == null ? ctx.saleService.dailyTotals(30) : ctx.saleService.dailyTotalsForSeller(30, userId);
+            }
             Platform.runLater(() -> {
                 series.getData().clear();
                 daily.forEach((day, total) ->

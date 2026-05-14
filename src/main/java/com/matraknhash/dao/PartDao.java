@@ -126,6 +126,21 @@ public class PartDao extends BaseDao<Part> {
         return out;
     }
 
+    public List<Part> findLowStockForSeller(int sellerId) {
+        String sql = "SELECT * FROM parts WHERE quantity <= min_qty AND seller_id = ? ORDER BY quantity ASC";
+        List<Part> out = new ArrayList<>();
+        try (Connection c = conn();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, sellerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) out.add(extract(rs));
+            }
+        } catch (SQLException e) {
+            throw new DaoException("findLowStockForSeller failed", e);
+        }
+        return out;
+    }
+
     public List<Part> search(String term) {
         String sql = "SELECT * FROM parts WHERE sku LIKE ? OR name LIKE ? ORDER BY name";
         List<Part> out = new ArrayList<>();
@@ -150,6 +165,18 @@ public class PartDao extends BaseDao<Part> {
             return rs.next() ? rs.getInt(1) : 0;
         } catch (SQLException e) {
             throw new DaoException("countAll failed", e);
+        }
+    }
+
+    public int countBySeller(int sellerId) {
+        try (Connection c = conn();
+             PreparedStatement ps = c.prepareStatement("SELECT COUNT(*) FROM parts WHERE seller_id = ?")) {
+            ps.setInt(1, sellerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            throw new DaoException("countBySeller failed", e);
         }
     }
 

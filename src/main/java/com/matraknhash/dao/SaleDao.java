@@ -227,13 +227,24 @@ public class SaleDao {
     // ====================================================================
 
     /**
-     * Customer places a marketplace order. Stock is NOT touched; the seller
-     * must "print the receipt" and admin must approve before stock changes.
+     * Customer places a marketplace order. Stock is DEDUCTED immediately to prevent
+     * overselling. The order remains PLACED until the seller acknowledges it.
      */
     public Sale placeOrder(Sale sale, int buyerId) {
         try (Connection c = ConnectionFactory.borrow()) {
             c.setAutoCommit(false);
             try {
+                try (PreparedStatement dec = c.prepareStatement(
+                        "UPDATE parts SET quantity = quantity - ? WHERE id = ? AND quantity >= ?")) {
+                    for (SaleItem it : sale.getItems()) {
+                        dec.setInt(1, it.getQuantity());
+                        dec.setInt(2, it.getPartId());
+                        dec.setInt(3, it.getQuantity());
+                        if (dec.executeUpdate() == 0) {
+                            throw new DaoException("Insufficient stock for part #" + it.getPartId());
+                        }
+                    }
+                }
                 try (PreparedStatement ps = c.prepareStatement(
                         "INSERT INTO sales(seller_id,total,status,buyer_id) VALUES (?,?,'PLACED',?)",
                         Statement.RETURN_GENERATED_KEYS)) {
@@ -270,66 +281,18 @@ public class SaleDao {
         }
     }
 
-    /** Seller "prints the receipt": PLACED -> SELLER_ACK. */
+    /** Seller "prints the receipt": PLACED -> APPROVED. */
     public void sellerAck(int saleId) {
         try (Connection c = ConnectionFactory.borrow()) {
             String st = readStatus(c, saleId);
             if (!"PLACED".equals(st))
                 throw new DaoException("Order #" + saleId + " is " + st + ", cannot ack");
             try (PreparedStatement ps = c.prepareStatement(
-                    "UPDATE sales SET status='SELLER_ACK', seller_ack_at=NOW() WHERE id=?")) {
+                    "UPDATE sales SET status='APPROVED', seller_ack_at=NOW() WHERE id=?")) {
                 ps.setInt(1, saleId);
                 ps.executeUpdate();
             }
         } catch (SQLException e) { throw new DaoException("sellerAck failed: " + e.getMessage(), e); }
-    }
-
-    /** Admin approves a seller-acked order: deduct stock + flip to APPROVED. Atomic. */
-    public void approveOrder(int saleId, int adminId) {
-        try (Connection c = ConnectionFactory.borrow()) {
-            c.setAutoCommit(false);
-            try {
-                String st = readStatus(c, saleId);
-                if (!"SELLER_ACK".equals(st) && !"PLACED".equals(st))
-                    throw new DaoException("Order #" + saleId + " is " + st + ", cannot approve");
-
-                try (PreparedStatement load = c.prepareStatement(
-                            "SELECT part_id, quantity FROM sale_items WHERE sale_id=?");
-                     PreparedStatement dec = c.prepareStatement(
-                            "UPDATE parts SET quantity = quantity - ? WHERE id=? AND quantity >= ?")) {
-                    load.setInt(1, saleId);
-                    try (ResultSet rs = load.executeQuery()) {
-                        while (rs.next()) {
-                            int partId = rs.getInt(1), qty = rs.getInt(2);
-                            dec.setInt(1, qty); dec.setInt(2, partId); dec.setInt(3, qty);
-                            if (dec.executeUpdate() == 0)
-                                throw new DaoException("Insufficient stock for part #" + partId);
-                        }
-                    }
-                }
-                try (PreparedStatement upd = c.prepareStatement(
-                        "UPDATE sales SET status='APPROVED', approver_id=?, approved_at=NOW() WHERE id=?")) {
-                    upd.setInt(1, adminId); upd.setInt(2, saleId); upd.executeUpdate();
-                }
-                c.commit();
-            } catch (SQLException | DaoException e) {
-                try { c.rollback(); } catch (SQLException ignore) {}
-                if (e instanceof DaoException de) throw de;
-                throw new DaoException("approve order failed: " + e.getMessage(), e);
-            }
-        } catch (SQLException e) { throw new DaoException("approve order failed: " + e.getMessage(), e); }
-    }
-
-    /** Admin rejects an order: status -> REJECTED. No stock change. */
-    public void rejectOrder(int saleId, int adminId, String reason) {
-        try (Connection c = ConnectionFactory.borrow();
-             PreparedStatement upd = c.prepareStatement(
-                "UPDATE sales SET status='REJECTED', approver_id=?, approved_at=NOW(), reject_reason=? WHERE id=?")) {
-            upd.setInt(1, adminId);
-            upd.setString(2, reason == null ? "" : reason);
-            upd.setInt(3, saleId);
-            upd.executeUpdate();
-        } catch (SQLException e) { throw new DaoException("reject order failed: " + e.getMessage(), e); }
     }
 
     /** Orders placed by a given customer. */
@@ -415,6 +378,20 @@ public class SaleDao {
         }
     }
 
+    public double totalSalesSinceForSeller(LocalDateTime since, int sellerId) {
+        String sql = "SELECT COALESCE(SUM(total),0) FROM sales WHERE status='APPROVED' AND created_at >= ? AND seller_id = ?";
+        try (Connection c = c();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, since.format(TS));
+            ps.setInt(2, sellerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getDouble(1) : 0;
+            }
+        } catch (SQLException e) {
+            throw new DaoException("totalSalesSinceForSeller failed", e);
+        }
+    }
+
     public double totalProfitSince(LocalDateTime since) {
         String sql = "SELECT COALESCE(SUM((si.unit_price - p.cost_price) * si.quantity),0) " +
                      "FROM sale_items si JOIN parts p ON p.id = si.part_id " +
@@ -428,6 +405,23 @@ public class SaleDao {
             }
         } catch (SQLException e) {
             throw new DaoException("totalProfitSince failed", e);
+        }
+    }
+
+    public double totalProfitSinceForSeller(LocalDateTime since, int sellerId) {
+        String sql = "SELECT COALESCE(SUM((si.unit_price - p.cost_price) * si.quantity),0) " +
+                     "FROM sale_items si JOIN parts p ON p.id = si.part_id " +
+                     "JOIN sales s ON s.id = si.sale_id " +
+                     "WHERE s.status='APPROVED' AND s.created_at >= ? AND s.seller_id = ?";
+        try (Connection c = c();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, since.format(TS));
+            ps.setInt(2, sellerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getDouble(1) : 0;
+            }
+        } catch (SQLException e) {
+            throw new DaoException("totalProfitSinceForSeller failed", e);
         }
     }
 
@@ -445,6 +439,24 @@ public class SaleDao {
             }
         } catch (SQLException e) {
             throw new DaoException("dailyTotals failed", e);
+        }
+        return out;
+    }
+
+    public Map<String, Double> dailyTotalsForSeller(int days, int sellerId) {
+        String sql = "SELECT DATE(created_at) d, SUM(total) t FROM sales " +
+                     "WHERE status='APPROVED' AND seller_id = ? AND created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) " +
+                     "GROUP BY d ORDER BY d";
+        Map<String, Double> out = new LinkedHashMap<>();
+        try (Connection c = c();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, sellerId);
+            ps.setInt(2, days);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) out.put(rs.getString("d"), rs.getDouble("t"));
+            }
+        } catch (SQLException e) {
+            throw new DaoException("dailyTotalsForSeller failed", e);
         }
         return out;
     }
@@ -469,11 +481,86 @@ public class SaleDao {
         return out;
     }
 
+    /** Top sellers ranked by total approved revenue. */
+    public List<Object[]> topSellersByRevenue(int limit) {
+        String sql = "SELECT u.full_name, COALESCE(SUM(s.total), 0) rev " +
+                     "FROM sales s JOIN users u ON u.id = s.seller_id " +
+                     "WHERE s.status = 'APPROVED' " +
+                     "GROUP BY s.seller_id ORDER BY rev DESC LIMIT ?";
+        List<Object[]> out = new ArrayList<>();
+        try (Connection c = c();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) out.add(new Object[]{rs.getString(1), rs.getDouble(2)});
+            }
+        } catch (SQLException e) {
+            throw new DaoException("topSellersByRevenue failed", e);
+        }
+        return out;
+    }
+
     public int countAll() {
         try (Connection c = c();
              PreparedStatement ps = c.prepareStatement("SELECT COUNT(*) FROM sales");
              ResultSet rs = ps.executeQuery()) {
             return rs.next() ? rs.getInt(1) : 0;
         } catch (SQLException e) { throw new DaoException("countAll sales failed", e); }
+    }
+
+    /** Customer requests a return on an APPROVED order. */
+    public void requestReturn(int saleId, String reason) {
+        String sql = "UPDATE sales SET status = 'RETURN_REQUESTED', return_reason = ?, " +
+                     "return_requested_at = NOW() WHERE id = ? AND status = 'APPROVED'";
+        try (Connection c = c();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, reason == null ? "" : reason);
+            ps.setInt(2, saleId);
+            int rows = ps.executeUpdate();
+            if (rows == 0) throw new DaoException("Order not eligible for return (must be APPROVED)");
+        } catch (SQLException e) {
+            throw new DaoException("requestReturn failed", e);
+        }
+    }
+
+    /** Seller approves the return: status → RETURNED, stock restored atomically. */
+    public void approveReturn(int saleId) {
+        try (Connection c = ConnectionFactory.borrow()) {
+            c.setAutoCommit(false);
+            try {
+                // Check current status
+                try (PreparedStatement ps = c.prepareStatement(
+                        "SELECT status FROM sales WHERE id = ? FOR UPDATE")) {
+                    ps.setInt(1, saleId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next() || !"RETURN_REQUESTED".equals(rs.getString(1)))
+                            throw new DaoException("Order not in RETURN_REQUESTED state");
+                    }
+                }
+                // Restore stock for each item
+                try (PreparedStatement ps = c.prepareStatement(
+                        "UPDATE parts p JOIN sale_items si ON p.id = si.part_id " +
+                        "SET p.quantity = p.quantity + si.quantity WHERE si.sale_id = ?")) {
+                    ps.setInt(1, saleId);
+                    ps.executeUpdate();
+                }
+                // Flip status
+                try (PreparedStatement ps = c.prepareStatement(
+                        "UPDATE sales SET status = 'RETURNED', return_approved_at = NOW() WHERE id = ?")) {
+                    ps.setInt(1, saleId);
+                    ps.executeUpdate();
+                }
+                c.commit();
+            } catch (Exception ex) {
+                c.rollback();
+                throw ex instanceof DaoException ? (DaoException) ex : new DaoException("approveReturn failed", ex);
+            } finally {
+                c.setAutoCommit(true);
+            }
+        } catch (DaoException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new DaoException("approveReturn failed", e);
+        }
     }
 }
