@@ -14,9 +14,6 @@ public class SaleService {
     public Sale create(Sale s)                       { s.recomputeTotal(); return dao.create(s); }
     public void approve(int saleId, int approverId)  { dao.approve(saleId, approverId); }
     public void reject(int saleId, int approverId, String reason) { dao.reject(saleId, approverId, reason); }
-    public List<Sale> listPending()                  { return dao.findByStatus(Sale.Status.PENDING); }
-    public List<Sale> listByStatus(Sale.Status s)    { return dao.findByStatus(s); }
-    public int countPending()                        { return dao.countPending(); }
 
     // --- marketplace order flow (M4) ---
     public Sale placeOrder(Sale s, int buyerId)               { s.recomputeTotal(); return dao.placeOrder(s, buyerId); }
@@ -25,12 +22,9 @@ public class SaleService {
     public List<Sale> incomingForSeller(int sellerId)         {
         return dao.findForSeller(sellerId, Sale.Status.PLACED, Sale.Status.RETURN_REQUESTED);
     }
-    public List<Sale> historyForSeller(int sellerId)          {
-        return dao.findForSeller(sellerId,
-                Sale.Status.APPROVED, Sale.Status.REJECTED, Sale.Status.CANCELLED);
-    }
-    public List<Sale> pendingAdminOrders() {
-        return dao.findByStatus(Sale.Status.APPROVED);
+    /** Admin-wide marketplace history: every order with a buyer, every status. */
+    public List<Sale> allMarketplaceOrders() {
+        return dao.findAllMarketplace();
     }
     public double totalSalesLast30Days()             { return dao.totalSalesSince(LocalDateTime.now().minusDays(30)); }
     public double totalSalesLast30DaysForSeller(int s) { return dao.totalSalesSinceForSeller(LocalDateTime.now().minusDays(30), s); }

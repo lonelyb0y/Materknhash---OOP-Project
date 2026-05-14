@@ -192,8 +192,8 @@ public class SaleDao {
         return out;
     }
 
-    /** Load line items for a single sale (used by the approval screen). */
-    public List<SaleItem> findItems(int saleId) {
+    /** Load line items for a single sale. */
+    private List<SaleItem> findItems(int saleId) {
         String sql = "SELECT si.id, si.sale_id, si.part_id, si.quantity, si.unit_price, " +
                      "       p.sku, p.name FROM sale_items si " +
                      "LEFT JOIN parts p ON p.id = si.part_id " +
@@ -303,6 +303,17 @@ public class SaleDao {
         return loadSales(sql, ps -> ps.setInt(1, buyerId));
     }
 
+    /** All marketplace orders (every row with a buyer), newest first. Admin history view. */
+    public List<Sale> findAllMarketplace() {
+        String sql = "SELECT s.*, u.full_name AS seller_name, b.full_name AS buyer_name " +
+                     "FROM sales s " +
+                     "LEFT JOIN users u ON u.id = s.seller_id " +
+                     "LEFT JOIN users b ON b.id = s.buyer_id " +
+                     "WHERE s.buyer_id IS NOT NULL " +
+                     "ORDER BY s.created_at DESC, s.id DESC";
+        return loadSales(sql, ps -> {});
+    }
+
     /** Marketplace orders waiting on a given seller (or already moved past). */
     public List<Sale> findForSeller(int sellerId, Sale.Status... statuses) {
         StringBuilder sb = new StringBuilder(
@@ -355,15 +366,6 @@ public class SaleDao {
 
     @FunctionalInterface
     private interface SqlBinder { void bind(PreparedStatement ps) throws SQLException; }
-
-    public int countPending() {
-        try (Connection c = c();
-             PreparedStatement ps = c.prepareStatement(
-                "SELECT COUNT(*) FROM sales WHERE status='PENDING'");
-             ResultSet rs = ps.executeQuery()) {
-            return rs.next() ? rs.getInt(1) : 0;
-        } catch (SQLException e) { throw new DaoException("countPending failed: " + e.getMessage(), e); }
-    }
 
     public double totalSalesSince(LocalDateTime since) {
         String sql = "SELECT COALESCE(SUM(total),0) FROM sales WHERE status='APPROVED' AND created_at >= ?";

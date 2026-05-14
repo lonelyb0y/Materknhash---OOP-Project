@@ -40,7 +40,7 @@
             <Button fx:id="navParts"          text="�   Spare Parts"          styleClass="nav-item" onAction="#showParts"/>
             <Button fx:id="navListingsReview" text="�   Listings Review"      styleClass="nav-item" onAction="#showListingsReview"/>
             <Button fx:id="navServiceReview"  text="🪧   Service Offers Review" styleClass="nav-item" onAction="#showServiceReview"/>
-            <Button fx:id="navOrdersAdmin"    text="✅   Approve Orders"       styleClass="nav-item" onAction="#showOrdersAdmin"/>
+            <Button fx:id="navOrdersAdmin"    text="📜   Orders History"       styleClass="nav-item" onAction="#showOrdersAdmin"/>
             <Button fx:id="navPurchases"      text="📦   Purchases"            styleClass="nav-item" onAction="#showPurchases"/>
             <Button fx:id="navSuppliers"      text="🏭   Suppliers"            styleClass="nav-item" onAction="#showSuppliers"/>
             <Button fx:id="navReports"        text="📊   Reports"              styleClass="nav-item" onAction="#showReports"/>

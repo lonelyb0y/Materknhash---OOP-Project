@@ -12,11 +12,13 @@
     <HBox alignment="CENTER_LEFT" spacing="10">
         <Label text="Marketplace Orders History" styleClass="page-h1"/>
         <Region HBox.hgrow="ALWAYS"/>
+        <Label text="Status:" styleClass="muted"/>
+        <ComboBox fx:id="statusFilter" prefWidth="180"/>
         <Label fx:id="lblCount" text="0 recent orders" styleClass="muted"/>
         <Button text="Refresh" onAction="#onRefresh" styleClass="btn-secondary"/>
     </HBox>
 
-    <Label text="Recent marketplace orders that have been acknowledged and fulfilled by sellers."
+    <Label text="Every marketplace order, across every status. Filter by status to narrow the view."
            styleClass="muted" wrapText="true"/>
 
     <SplitPane dividerPositions="0.42" VBox.vgrow="ALWAYS">
@@ -28,6 +30,7 @@
                         <TableColumn fx:id="colBuyer"  text="Buyer"   prefWidth="140"/>
                         <TableColumn fx:id="colSeller" text="Seller"  prefWidth="140"/>
                         <TableColumn fx:id="colTotal"  text="Total"   prefWidth="100"/>
+                        <TableColumn fx:id="colStat"   text="Status"  prefWidth="140"/>
                         <TableColumn fx:id="colWhen"   text="Placed"  prefWidth="140"/>
                     </columns>
                 </TableView>
