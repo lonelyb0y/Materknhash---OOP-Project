@@ -85,8 +85,7 @@ public class CartController {
             Session.cart().clear();
             // Show confirmation + close.
             Alert ok = new Alert(Alert.AlertType.INFORMATION,
-                    "Order #" + placed.getId() + " placed! The seller will receive it shortly and the admin " +
-                    "will finalise it. You can track it in 'My Orders'.",
+                    "Order #" + placed.getId() + " placed! The seller will receive it shortly and fulfill it. You can track it in 'My Orders'.",
                     ButtonType.OK);
             ok.setHeaderText("Order placed");
             ok.showAndWait();

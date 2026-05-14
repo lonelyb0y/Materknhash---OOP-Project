@@ -39,7 +39,6 @@ public class AdminOrdersController {
     @FXML private TableColumn<SaleItem, Number> colLqty, colLprc, colLsub;
 
     @FXML private Label lblHeader, lblCount, status;
-    @FXML private Button btnApprove, btnReject;
 
     private final ObservableList<Sale>     orders = FXCollections.observableArrayList();
     private final ObservableList<SaleItem> lines  = FXCollections.observableArrayList();
@@ -86,12 +85,10 @@ public class AdminOrdersController {
         AppContext.get().userService.all().forEach(u -> userNames.put(u.getId(), u.getFullName()));
         List<Sale> pending = AppContext.get().saleService.pendingAdminOrders();
         orders.setAll(pending);
-        lblCount.setText(pending.size() + " awaiting you");
+        lblCount.setText(pending.size() + " recent orders");
         if (pending.isEmpty()) {
             lblHeader.setText("Nothing in the queue right now.");
             lines.clear();
-            btnApprove.setDisable(true);
-            btnReject.setDisable(true);
         } else orderTable.getSelectionModel().selectFirst();
     }
 
@@ -99,44 +96,6 @@ public class AdminOrdersController {
         if (s == null) return;
         lblHeader.setText("Order #" + s.getId() + " · " + money.format(s.getTotal()) + " EGP");
         lines.setAll(s.getItems());
-        btnApprove.setDisable(false);
-        btnReject.setDisable(false);
         status.setText("");
-    }
-
-    @FXML
-    private void onApprove() {
-        Sale sel = orderTable.getSelectionModel().getSelectedItem();
-        if (sel == null) return;
-        User me = Session.current();
-        if (me == null) return;
-        try {
-            AppContext.get().saleService.approveOrder(sel.getId(), me.getId());
-            status.setText("Approved order #" + sel.getId() + ". Stock has been deducted.");
-            refresh();
-        } catch (DaoException e) {
-            status.setText("Approval failed: " + e.getMessage());
-        }
-    }
-
-    @FXML
-    private void onReject() {
-        Sale sel = orderTable.getSelectionModel().getSelectedItem();
-        if (sel == null) return;
-        User me = Session.current();
-        if (me == null) return;
-        TextInputDialog dlg = new TextInputDialog();
-        dlg.setTitle("Reject order");
-        dlg.setHeaderText("Reject order #" + sel.getId() + " (" + money.format(sel.getTotal()) + " EGP)");
-        dlg.setContentText("Reason (shown to the customer):");
-        Optional<String> reason = dlg.showAndWait();
-        if (reason.isEmpty()) return;
-        try {
-            AppContext.get().saleService.rejectOrder(sel.getId(), me.getId(), reason.get().trim());
-            status.setText("Rejected order #" + sel.getId() + ".");
-            refresh();
-        } catch (DaoException e) {
-            status.setText("Rejection failed: " + e.getMessage());
-        }
     }
 }

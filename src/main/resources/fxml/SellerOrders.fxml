@@ -42,8 +42,10 @@
                     </columns>
                 </TableView>
                 <HBox spacing="10" alignment="CENTER_RIGHT">
-                    <Button fx:id="btnPrint" text="🖨  Print receipt &amp; forward to admin"
+                    <Button fx:id="btnPrint" text="🖨  Print receipt &amp; Fulfill"
                             onAction="#onPrint" styleClass="btn-primary" disable="true"/>
+                    <Button fx:id="btnAcceptReturn" text="✅  Accept Return"
+                            onAction="#onAcceptReturn" styleClass="btn-danger" disable="true"/>
                 </HBox>
                 <Label fx:id="status" wrapText="true" styleClass="muted"/>
             </VBox>

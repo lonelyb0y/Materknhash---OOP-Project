@@ -10,13 +10,13 @@
     <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
 
     <HBox alignment="CENTER_LEFT" spacing="10">
-        <Label text="Marketplace Orders Approval" styleClass="page-h1"/>
+        <Label text="Marketplace Orders History" styleClass="page-h1"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Label fx:id="lblCount" text="0 awaiting you" styleClass="muted"/>
+        <Label fx:id="lblCount" text="0 recent orders" styleClass="muted"/>
         <Button text="Refresh" onAction="#onRefresh" styleClass="btn-secondary"/>
     </HBox>
 
-    <Label text="Orders that sellers have acknowledged and forwarded for final approval. Approving deducts stock and confirms the sale."
+    <Label text="Recent marketplace orders that have been acknowledged and fulfilled by sellers."
            styleClass="muted" wrapText="true"/>
 
     <SplitPane dividerPositions="0.42" VBox.vgrow="ALWAYS">
@@ -43,11 +43,6 @@
                         <TableColumn fx:id="colLsub"  text="Subtotal" prefWidth="100"/>
                     </columns>
                 </TableView>
-                <HBox spacing="10" alignment="CENTER_RIGHT">
-                    <Button fx:id="btnReject"  text="Reject"  onAction="#onReject"  styleClass="btn-danger"  disable="true"/>
-                    <Button fx:id="btnApprove" text="Approve &amp; deduct stock"
-                            onAction="#onApprove" styleClass="btn-primary" disable="true"/>
-                </HBox>
                 <Label fx:id="status" wrapText="true" styleClass="muted"/>
             </VBox>
         </items>

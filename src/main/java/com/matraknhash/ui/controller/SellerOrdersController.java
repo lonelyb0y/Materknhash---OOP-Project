@@ -18,9 +18,9 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Seller view of incoming marketplace orders. "Print receipt" moves a PLACED
- * order to SELLER_ACK, signalling the admin to make the final approval.
- * After SELLER_ACK the order disappears from this list (admin owns it).
+ * Seller view of incoming marketplace orders. "Print receipt & Fulfill" moves
+ * a PLACED order directly to APPROVED. "Accept Return" restores stock and
+ * marks the order as RETURNED. No further admin step is required.
  */
 public class SellerOrdersController {
 
@@ -35,7 +35,7 @@ public class SellerOrdersController {
     @FXML private TableColumn<SaleItem, Number> colLqty, colLprc, colLsub;
 
     @FXML private Label lblHeader, lblCount, status;
-    @FXML private Button btnPrint;
+    @FXML private Button btnPrint, btnAcceptReturn;
 
     private final ObservableList<Sale>     orders = FXCollections.observableArrayList();
     private final ObservableList<SaleItem> lines  = FXCollections.observableArrayList();
@@ -81,6 +81,7 @@ public class SellerOrdersController {
             lblHeader.setText("No incoming orders right now.");
             lines.clear();
             btnPrint.setDisable(true);
+            btnAcceptReturn.setDisable(true);
         } else orderTable.getSelectionModel().selectFirst();
     }
 
@@ -89,10 +90,20 @@ public class SellerOrdersController {
         lblHeader.setText("Order #" + s.getId() + " · " + s.getBuyerName() + " · "
                 + money.format(s.getTotal()) + " EGP");
         lines.setAll(s.getItems());
+
+        // Fulfill button: only for PLACED
         btnPrint.setDisable(s.getStatus() != Sale.Status.PLACED);
-        status.setText(s.getStatus() == Sale.Status.SELLER_ACK
-                ? "Already forwarded — waiting for admin approval."
-                : "");
+
+        // Accept Return button: only for RETURN_REQUESTED
+        btnAcceptReturn.setDisable(s.getStatus() != Sale.Status.RETURN_REQUESTED);
+
+        if (s.getStatus() == Sale.Status.RETURN_REQUESTED) {
+            status.setText("⚠ Customer wants to return this order. Reason: " + s.getReturnReason());
+        } else if (s.getStatus() == Sale.Status.APPROVED) {
+            status.setText("Order fulfilled ✓");
+        } else {
+            status.setText("");
+        }
     }
 
     @FXML
@@ -101,7 +112,20 @@ public class SellerOrdersController {
         if (sel == null) return;
         try {
             AppContext.get().saleService.sellerAck(sel.getId());
-            status.setText("Printed receipt for order #" + sel.getId() + ". Admin will finalise it.");
+            status.setText("Order fulfilled for order #" + sel.getId() + ".");
+            refresh();
+        } catch (DaoException e) {
+            status.setText("Error: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void onAcceptReturn() {
+        Sale sel = orderTable.getSelectionModel().getSelectedItem();
+        if (sel == null) return;
+        try {
+            AppContext.get().saleService.approveReturn(sel.getId());
+            status.setText("Return accepted for order #" + sel.getId() + ". Stock has been restored.");
             refresh();
         } catch (DaoException e) {
             status.setText("Error: " + e.getMessage());
@@ -110,9 +134,10 @@ public class SellerOrdersController {
 
     private static String pretty(Sale.Status s) {
         return switch (s) {
-            case PLACED     -> "New (print receipt)";
-            case SELLER_ACK -> "Forwarded to admin";
-            default         -> s.name();
+            case PLACED            -> "New (fulfill)";
+            case RETURN_REQUESTED  -> "⚠ Return requested";
+            case APPROVED          -> "Fulfilled";
+            default                -> s.name();
         };
     }
 }
