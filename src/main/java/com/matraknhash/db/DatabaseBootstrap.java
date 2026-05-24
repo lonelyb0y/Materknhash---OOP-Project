@@ -44,6 +44,8 @@ public final class DatabaseBootstrap {
             } else {
                 System.out.println("[DatabaseBootstrap] Database schema already applied. Skipping initialization.");
             }
+            // Always clean up default placeholder seed data (IDs 1-30) to provide a fresh merchant experience
+            cleanupDefaultSeedData(c);
         }
     }
 
@@ -150,6 +152,22 @@ public final class DatabaseBootstrap {
             ps.setString(4, fullName);
             ps.setString(5, role);
             ps.executeUpdate();
+        }
+    }
+
+    /** Clean up the 30 default placeholder parts, sales, and purchases to ensure a completely clean system. */
+    private static void cleanupDefaultSeedData(Connection c) {
+        System.out.println("[DatabaseBootstrap] Wiping default placeholder seed data...");
+        try (Statement st = c.createStatement()) {
+            // Delete all references and parts that were seeded with IDs <= 30
+            st.executeUpdate("DELETE FROM sale_items WHERE part_id <= 30");
+            st.executeUpdate("DELETE FROM purchase_items WHERE part_id <= 30");
+            st.executeUpdate("DELETE FROM parts WHERE id <= 30");
+            st.executeUpdate("DELETE FROM sales WHERE id <= 30");
+            st.executeUpdate("DELETE FROM purchases WHERE id <= 30");
+            System.out.println("[DatabaseBootstrap] Default placeholder seed data successfully removed!");
+        } catch (SQLException e) {
+            System.err.println("[DatabaseBootstrap] Error cleaning up placeholder seed data: " + e.getMessage());
         }
     }
 }

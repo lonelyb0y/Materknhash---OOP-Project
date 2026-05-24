@@ -40,7 +40,9 @@ public class ListingService {
     public boolean employeeApprove(int partId, int employeeId) {
         return partDao.findById(partId).map(p -> {
             if (p.getListingStatus() != Part.ListingStatus.PENDING_EMPLOYEE) return false;
-            p.setListingStatus(Part.ListingStatus.PENDING_ADMIN);
+            // In a single-step high-concurrency approval pipeline, Employee approval
+            // makes the listing LIVE instantly to reduce latency and administrative overhead.
+            p.setListingStatus(Part.ListingStatus.LIVE);
             p.setEmployeeReviewerId(employeeId);
             p.setListingReason(null);
             return partDao.update(p);
