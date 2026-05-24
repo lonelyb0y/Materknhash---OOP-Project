@@ -144,8 +144,24 @@ public class PartsController {
         Alert a = new Alert(Alert.AlertType.CONFIRMATION, "Delete part \"" + p.getName() + "\"?", ButtonType.OK, ButtonType.CANCEL);
         Optional<ButtonType> r = a.showAndWait();
         if (r.isPresent() && r.get() == ButtonType.OK) {
-            AppContext.get().partService.delete(p.getId());
-            reload();
+            try {
+                boolean ok = AppContext.get().partService.delete(p.getId());
+                if (!ok) {
+                    Alert err = new Alert(Alert.AlertType.ERROR, "Could not delete part. It may not exist anymore.", ButtonType.OK);
+                    err.showAndWait();
+                } else {
+                    reload();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                String msg = "Cannot delete \"" + p.getName() + "\" because it has transaction history (sales or purchases) associated with it.\n\n"
+                        + "To keep your sales history accurate, ERP systems prevent deleting products with orders.\n"
+                        + "Instead, you can set its quantity to 0 or hide it from the catalog.";
+                Alert err = new Alert(Alert.AlertType.ERROR, msg, ButtonType.OK);
+                err.setHeaderText("Database Constraint Violation");
+                err.setTitle("Delete Failed");
+                err.showAndWait();
+            }
         }
     }
 

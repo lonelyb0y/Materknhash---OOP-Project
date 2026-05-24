@@ -128,6 +128,9 @@ public class MyListingsController {
     }
 
     private static String pretty(Part p) {
+        if (p.getListingStatus() == Part.ListingStatus.LIVE && p.getQuantity() == 0) {
+            return "★ Live (Out of Stock)";
+        }
         return switch (p.getListingStatus() == null ? Part.ListingStatus.LIVE : p.getListingStatus()) {
             case DRAFT             -> "Draft";
             case PENDING_EMPLOYEE  -> "Awaiting employee";

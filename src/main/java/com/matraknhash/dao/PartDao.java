@@ -68,7 +68,7 @@ public class PartDao extends BaseDao<Part> {
     }
 
     public List<Part> findLive() {
-        String sql = "SELECT * FROM parts WHERE listing_status='LIVE' AND quantity > 0 ORDER BY name";
+        String sql = "SELECT * FROM parts WHERE listing_status='LIVE' ORDER BY name";
         return queryList(sql);
     }
 

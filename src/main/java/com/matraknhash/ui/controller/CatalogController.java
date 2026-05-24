@@ -153,12 +153,13 @@ public class CatalogController {
         Label price = new Label(money.format(p.getSellPrice()) + " EGP");
         price.setStyle("-fx-text-fill: #0f172a; -fx-font-size: 18px; -fx-font-weight: bold;");
 
-        Label stock = new Label(p.getQuantity() + " in stock");
+        Label stock = new Label(p.getQuantity() > 0 ? p.getQuantity() + " in stock" : "Out of Stock");
         stock.getStyleClass().add("muted");
-        stock.setStyle("-fx-font-size: 11px;");
+        stock.setStyle("-fx-font-size: 11px;" + (p.getQuantity() == 0 ? "-fx-text-fill: #ef4444; -fx-font-weight: bold;" : ""));
 
-        Button add = new Button("🛒  Add to Cart");
-        add.getStyleClass().add("btn-primary");
+        Button add = new Button(p.getQuantity() > 0 ? "🛒  Add to Cart" : "❌ Out of Stock");
+        add.getStyleClass().add(p.getQuantity() > 0 ? "btn-primary" : "btn-secondary");
+        add.setDisable(p.getQuantity() == 0);
         add.setMaxWidth(Double.MAX_VALUE);
         add.setOnAction(e -> onAdd(p));
 
