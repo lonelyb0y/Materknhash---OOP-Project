@@ -16,8 +16,8 @@ import java.util.Base64;
  */
 public final class ImageUploader {
 
-    // A free public developer testing API key for ImgBB
-    private static final String API_KEY = "29ea5b8396ec2fb5ea4a6c4293f0b2f1";
+    // User's custom personal API key for ImgBB cloud storage
+    private static final String API_KEY = "a4a284409c211812d485f61499b0ba3d";
 
     private ImageUploader() {}
 
