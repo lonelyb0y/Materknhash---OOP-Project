@@ -44,6 +44,8 @@ public final class DatabaseBootstrap {
             } else {
                 System.out.println("[DatabaseBootstrap] Database schema already applied. Skipping initialization.");
             }
+            // Always apply shipping migrations to support the new workflow on warm databases
+            applyShippingMigrations(c);
             // Always clean up default placeholder seed data (IDs 1-30) to provide a fresh merchant experience
             cleanupDefaultSeedData(c);
         }
@@ -181,6 +183,38 @@ public final class DatabaseBootstrap {
             System.out.println("[DatabaseBootstrap] Default placeholder seed data successfully removed!");
         } catch (SQLException e) {
             System.err.println("[DatabaseBootstrap] Error cleaning up placeholder seed data: " + e.getMessage());
+        }
+    }
+ 
+    private static void applyShippingMigrations(Connection c) {
+        System.out.println("[DatabaseBootstrap] Checking and applying shipping migrations...");
+        try (Statement st = c.createStatement()) {
+            try {
+                st.executeUpdate("ALTER TABLE sales ADD COLUMN shipping_address VARCHAR(255) NULL");
+                System.out.println("[DatabaseBootstrap] Added column 'shipping_address' to 'sales' table.");
+            } catch (SQLException e) {
+                if (!e.getMessage().toLowerCase().contains("duplicate column")) {
+                    System.err.println("[DatabaseBootstrap] Error adding 'shipping_address': " + e.getMessage());
+                }
+            }
+            try {
+                st.executeUpdate("ALTER TABLE sales ADD COLUMN courier_name VARCHAR(120) NULL");
+                System.out.println("[DatabaseBootstrap] Added column 'courier_name' to 'sales' table.");
+            } catch (SQLException e) {
+                if (!e.getMessage().toLowerCase().contains("duplicate column")) {
+                    System.err.println("[DatabaseBootstrap] Error adding 'courier_name': " + e.getMessage());
+                }
+            }
+            try {
+                st.executeUpdate("ALTER TABLE sales ADD COLUMN tracking_number VARCHAR(120) NULL");
+                System.out.println("[DatabaseBootstrap] Added column 'tracking_number' to 'sales' table.");
+            } catch (SQLException e) {
+                if (!e.getMessage().toLowerCase().contains("duplicate column")) {
+                    System.err.println("[DatabaseBootstrap] Error adding 'tracking_number': " + e.getMessage());
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[DatabaseBootstrap] Error creating statement for shipping migrations: " + e.getMessage());
         }
     }
 }
