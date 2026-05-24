@@ -24,6 +24,9 @@
         </HBox>
         <HBox spacing="8">
             <VBox spacing="2" HBox.hgrow="ALWAYS">
+                <Label text="Cost price (EGP)"/><TextField fx:id="costField"/>
+            </VBox>
+            <VBox spacing="2" HBox.hgrow="ALWAYS">
                 <Label text="Sell price (EGP)"/><TextField fx:id="priceField"/>
             </VBox>
             <VBox spacing="2" HBox.hgrow="ALWAYS">
@@ -32,8 +35,11 @@
         </HBox>
         <Label text="Source supplier (★ trusted skips review)"/>
         <ComboBox fx:id="supplierCombo" prefWidth="320"/>
-        <Label text="Image URL"/>
-        <TextField fx:id="imgUrlField" promptText="https://example.com/image.png"/>
+        <Label text="Product Image"/>
+        <HBox spacing="6">
+            <TextField fx:id="imgUrlField" promptText="No image chosen" editable="false" HBox.hgrow="ALWAYS"/>
+            <Button text="Browse..." onAction="#onBrowseImage" styleClass="btn-secondary"/>
+        </HBox>
 
         <Label fx:id="formError" styleClass="error-label" managed="false" visible="false" wrapText="true"/>
         <Label fx:id="formInfo"  styleClass="muted"       managed="false" visible="false" wrapText="true"/>

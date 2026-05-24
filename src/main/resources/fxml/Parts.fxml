@@ -42,8 +42,11 @@
             <TextField fx:id="qtyField" promptText="Qty"     HBox.hgrow="ALWAYS"/>
             <TextField fx:id="minField" promptText="Min qty" HBox.hgrow="ALWAYS"/>
         </HBox>
-        <Label text="Image URL"/>
-        <TextField fx:id="imgUrlField" promptText="https://example.com/image.png"/>
+        <Label text="Product Image"/>
+        <HBox spacing="6">
+            <TextField fx:id="imgUrlField" promptText="No image chosen" editable="false" HBox.hgrow="ALWAYS"/>
+            <Button text="Browse..." onAction="#onBrowseImage" styleClass="btn-secondary"/>
+        </HBox>
 
         <Label fx:id="formError" styleClass="error-label" managed="false" visible="false"/>
 

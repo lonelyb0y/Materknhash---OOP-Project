@@ -91,9 +91,4 @@ public class ListingService {
     public List<Part> pendingEmployee()   { return partDao.findByListingStatus(Part.ListingStatus.PENDING_EMPLOYEE); }
     public List<Part> pendingAdmin()      { return partDao.findByListingStatus(Part.ListingStatus.PENDING_ADMIN); }
     public Optional<Part> find(int id)    { return partDao.findById(id); }
-
-    private boolean isTrustedSupplier(Integer supplierId) {
-        if (supplierId == null) return false;
-        return supplierDao.findById(supplierId).map(Supplier::isTrusted).orElse(false);
-    }
 }

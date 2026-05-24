@@ -24,7 +24,7 @@ public class AuthService {
 
         
         if (u.getStatus() == User.Status.PENDING_APPROVAL)
-            return Result.fail("0Your seller account is awaiting admin approval.");
+            return Result.fail("Your seller account is awaiting admin approval.");
         if (u.getStatus() == User.Status.SUSPENDED)
             return Result.fail("Account suspended. Contact the administrator.");
 

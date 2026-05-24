@@ -38,7 +38,8 @@ public class SalesController {
 
     @FXML
     public void initialize() {
-        partCombo.setItems(FXCollections.observableArrayList(AppContext.get().partService.all()));
+        // Show placeholder while loading
+        partCombo.setPromptText("Loading parts...");
         partCombo.setConverter(new javafx.util.StringConverter<>() {
             @Override public String toString(Part p) { return p == null ? "" : p.getSku() + "  " + p.getName(); }
             @Override public Part fromString(String s) { return null; }
@@ -53,8 +54,24 @@ public class SalesController {
         itemsTable.setItems(items);
         items.addListener((javafx.collections.ListChangeListener<? super SaleItem>) c -> recompute());
         lblDate.setText(LocalDate.now().toString());
-        lblInvNo.setText("INV-" + (AppContext.get().saleService.countAll() + 1));
+        lblInvNo.setText("INV-...");
         recompute();
+
+        // Load parts list in background to avoid freezing UI
+        new Thread(() -> {
+            try {
+                var allParts = AppContext.get().partService.all();
+                int count = AppContext.get().saleService.countAll();
+                javafx.application.Platform.runLater(() -> {
+                    partCombo.setItems(FXCollections.observableArrayList(allParts));
+                    partCombo.setPromptText("Select a part");
+                    lblInvNo.setText("INV-" + (count + 1));
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+                javafx.application.Platform.runLater(() -> partCombo.setPromptText("Error loading parts"));
+            }
+        }).start();
     }
 
     private void addRemoveColumn() {

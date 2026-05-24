@@ -188,6 +188,32 @@ public class PartsController {
     private static double parseD(String s, String f) { try { return Double.parseDouble(s.trim()); } catch (Exception e) { throw new IllegalArgumentException("Invalid number for " + f); } }
     private static int parseI(String s, String f)    { try { return Integer.parseInt(s.trim());   } catch (Exception e) { throw new IllegalArgumentException("Invalid integer for " + f); } }
 
+    @FXML
+    private void onBrowseImage() {
+        javafx.stage.FileChooser fc = new javafx.stage.FileChooser();
+        fc.setTitle("Select Product Image");
+        fc.getExtensionFilters().addAll(
+                new javafx.stage.FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif")
+        );
+        java.io.File file = fc.showOpenDialog(skuField.getScene().getWindow());
+        if (file == null) return;
+
+        imgUrlField.setText("Uploading...");
+        new Thread(() -> {
+            try {
+                String cloudUrl = com.matraknhash.util.ImageUploader.upload(file);
+                javafx.application.Platform.runLater(() -> imgUrlField.setText(cloudUrl));
+            } catch (Exception e) {
+                e.printStackTrace();
+                javafx.application.Platform.runLater(() -> {
+                    imgUrlField.setText("");
+                    Alert a = new Alert(Alert.AlertType.ERROR, "Failed to upload image: " + e.getMessage(), ButtonType.OK);
+                    a.showAndWait();
+                });
+            }
+        }).start();
+    }
+
     private void showError(String msg) { formError.setText(msg); formError.setVisible(true); formError.setManaged(true); }
     private void hideError()           { formError.setVisible(false); formError.setManaged(false); }
 }

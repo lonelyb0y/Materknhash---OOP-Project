@@ -17,7 +17,7 @@ import java.util.Locale;
 
 public class MyListingsController {
 
-    @FXML private TextField skuField, nameField, categoryField, makeField, modelField, priceField, qtyField, imgUrlField;
+    @FXML private TextField skuField, nameField, categoryField, makeField, modelField, costField, priceField, qtyField, imgUrlField;
     @FXML private ComboBox<Supplier> supplierCombo;
     @FXML private Label formError, formInfo;
 
@@ -30,7 +30,6 @@ public class MyListingsController {
 
     @FXML
     public void initialize() {
-        supplierCombo.setItems(FXCollections.observableArrayList(AppContext.get().supplierService.all()));
         supplierCombo.setConverter(new javafx.util.StringConverter<>() {
             @Override public String toString(Supplier s) {
                 if (s == null) return "";
@@ -54,7 +53,21 @@ public class MyListingsController {
         colNote.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getListingReason() == null ? "" : c.getValue().getListingReason()));
 
         table.setItems(items);
-        refresh();
+
+        // Load suppliers and listings in background to avoid freezing UI
+        new Thread(() -> {
+            try {
+                var sups = AppContext.get().supplierService.all();
+                var me = Session.current();
+                var listings = me != null ? AppContext.get().listingService.bySeller(me.getId()) : java.util.List.<Part>of();
+                javafx.application.Platform.runLater(() -> {
+                    supplierCombo.setItems(FXCollections.observableArrayList(sups));
+                    items.setAll(listings);
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     @FXML
@@ -70,7 +83,7 @@ public class MyListingsController {
     private void onClear() {
         skuField.clear(); nameField.clear(); categoryField.clear();
         makeField.clear(); modelField.clear();
-        priceField.clear(); qtyField.clear(); imgUrlField.clear();
+        costField.clear(); priceField.clear(); qtyField.clear(); imgUrlField.clear();
         supplierCombo.setValue(null);
         hideMessages();
     }
@@ -81,9 +94,10 @@ public class MyListingsController {
         try {
             if (skuField.getText().isBlank() || nameField.getText().isBlank())
                 throw new IllegalArgumentException("SKU and Name are required.");
+            double cost  = Double.parseDouble(costField.getText().trim());
             double price = Double.parseDouble(priceField.getText().trim());
             int qty      = Integer.parseInt(qtyField.getText().trim());
-            if (price <= 0 || qty < 0) throw new IllegalArgumentException("Price > 0 and stock >= 0.");
+            if (cost <= 0 || price <= 0 || qty < 0) throw new IllegalArgumentException("Cost > 0, Price > 0 and stock >= 0.");
 
             Part p = new Part();
             p.setSku(skuField.getText().trim());
@@ -91,7 +105,7 @@ public class MyListingsController {
             p.setCategory(categoryField.getText().trim());
             p.setCarMake(makeField.getText().trim());
             p.setCarModel(modelField.getText().trim());
-            p.setCostPrice(price * 0.7);  // placeholder until we add a cost field
+            p.setCostPrice(cost);
             p.setSellPrice(price);
             p.setQuantity(qty);
             p.setMinQty(0);
@@ -122,6 +136,32 @@ public class MyListingsController {
             case REJECTED          -> "Rejected";
             case HIDDEN            -> "Hidden";
         };
+    }
+
+    @FXML
+    private void onBrowseImage() {
+        javafx.stage.FileChooser fc = new javafx.stage.FileChooser();
+        fc.setTitle("Select Product Image");
+        fc.getExtensionFilters().addAll(
+                new javafx.stage.FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif")
+        );
+        java.io.File file = fc.showOpenDialog(skuField.getScene().getWindow());
+        if (file == null) return;
+
+        imgUrlField.setText("Uploading...");
+        new Thread(() -> {
+            try {
+                String cloudUrl = com.matraknhash.util.ImageUploader.upload(file);
+                javafx.application.Platform.runLater(() -> imgUrlField.setText(cloudUrl));
+            } catch (Exception e) {
+                e.printStackTrace();
+                javafx.application.Platform.runLater(() -> {
+                    imgUrlField.setText("");
+                    Alert a = new Alert(Alert.AlertType.ERROR, "Failed to upload image: " + e.getMessage(), ButtonType.OK);
+                    a.showAndWait();
+                });
+            }
+        }).start();
     }
 
     private void showError(String s) { formError.setText(s); formError.setManaged(true); formError.setVisible(true); formInfo.setManaged(false); formInfo.setVisible(false); }

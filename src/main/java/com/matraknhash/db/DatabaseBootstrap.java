@@ -44,11 +44,6 @@ public final class DatabaseBootstrap {
             } else {
                 System.out.println("[DatabaseBootstrap] Database schema already applied. Skipping initialization.");
             }
-
-            // Clean up unrelated placeholder images from all parts
-            try (Statement st = c.createStatement()) {
-                st.executeUpdate("UPDATE parts SET image_url = NULL");
-            } catch (SQLException ignore) {}
         }
     }
 
