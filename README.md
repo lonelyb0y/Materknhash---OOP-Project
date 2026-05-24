@@ -18,8 +18,8 @@ To prove its viability, **we have successfully contracted with an automotive par
 This project is owned and executed by our startup founders:
 * **Founder & Owner**: Mohamed Ahmed Ismael
 * **Co-Founder & Lead Engineer**: Mohamed Hamdy
-*  **Co-Founder & Lead Engineer**: Taha Yasser
-* **Co-Founder & Database Specialist**: Mohamed Suliman
+*  * Lead Engineer**: Taha Yasser
+* ** Database Specialist**: Mohamed Suliman
 * **Developer**: Khaled Ahmed
 * **Developer**: Ahmed Sayed
 
