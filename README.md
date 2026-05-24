@@ -1,11 +1,11 @@
-# 🚗 Materknhash ERP (متكرنهاش)
+#  Materknhash ERP (متكرنهاش)
 ### *Next-Generation Automotive Marketplace & Enterprise Resource Planning*
 
 Welcome to **Materknhash ERP** (متكرنهاش), a comprehensive multi-tenant automotive parts marketplace and enterprise resource planning desktop platform. Built with **JavaFX**, **JDBC**, **HikariCP**, and **MySQL/TiDB**, this application bridges the gap between suppliers, sellers, service centers, and customers under secure administrative supervision.
 
 ---
 
-## 💡 The Startup Story
+##  The Startup Story
 **Materknhash** was born out of a real-world tech startup initiative. As founders of this venture, we recognized a major bottleneck in the local automotive parts supply chain: the lack of robust, localized digital inventory management and marketplace coordination. 
 
 While bootstrapping this startup, we needed a powerful desktop application project for our academic curriculum. We decided to bridge both worlds by developing this production-grade desktop ERP platform. 
@@ -14,7 +14,7 @@ To prove its viability, **we have successfully contracted with an automotive par
 
 ---
 
-## 👑 Project Team & Contributors
+##  Project Team & Contributors
 This project is owned and executed by our startup founders:
 * **Founder & Owner**: Mohamed Ahmed Ismael
 * **Co-Founder & Lead Engineer**: Mohamed Hamdy
@@ -24,22 +24,22 @@ This project is owned and executed by our startup founders:
 
 ---
 
-## 🌟 Key Features
+##  Key Features
 - **Multi-Tenant Roles**: Distinct secure interfaces for **Admin**, **Employee**, **Seller**, **Customer**, and **Service Center**.
 - **Asynchronous Execution (Multithreading)**: High-latency network calls and heavy database calculations run on background threads, keeping the JavaFX GUI fully responsive and buttery smooth.
-- **Dynamic Shipping & Order Tracking 🚚**:
+- **Dynamic Shipping & Order Tracking **:
   - Customers input their **Shipping Address** at checkout.
   - Sellers process orders by assigning a **Courier Name** and **Tracking Number**, changing status to `SHIPPED`.
   - Customers receive **live delivery updates** with courier and tracking details directly on their tracking panel.
   - Admins inspect shipment metadata before final delivery approval and automated stock updates.
-- **Out of Stock Catalog Visibility 🔴**: Out-of-stock items (quantity = 0) are kept visible in the catalog with a distinct red "Out of Stock" badge and disabled buy button, helping buyers see what parts are carried.
+- **Out of Stock Catalog Visibility **: Out-of-stock items (quantity = 0) are kept visible in the catalog with a distinct red "Out of Stock" badge and disabled buy button, helping buyers see what parts are carried.
 - **Bilingual Core Support**: Advanced database character configurations fully support Arabic metadata, product descriptions, and filenames.
 - **Robust Foreign Key Constraint Safety**: Gracefully handles deletion failures for parts with active sales history. Instead of silent failures, it prompts managers with helpful instructions to set stock to 0 or hide the listing.
 - **Socket-Based Invoicing Server**: Features a multi-client TCP network socket server (`net` module) to process real-time sales transactions securely.
 
 ---
 
-## 📁 Project Architecture & Directory Structure
+##  Project Architecture & Directory Structure
 The codebase follows a modular MVC and Service-oriented architecture:
 
 ```
@@ -73,7 +73,7 @@ Materknhash/
 
 ---
 
-## 🔑 Default Accounts (For Testing & Review)
+##  Default Accounts (For Testing & Review)
 To help the professor/doctor test all workflows, the database bootstraps with these default accounts:
 
 | Role | Username | Password | Purpose |
@@ -87,7 +87,7 @@ To help the professor/doctor test all workflows, the database bootstraps with th
 
 ---
 
-## ⚙️ Configuration & Databases
+##  Configuration & Databases
 
 Database configurations are loaded from `src/main/resources/application.properties`.
 
@@ -116,7 +116,7 @@ To run the app with 0ms network latency:
 
 ---
 
-## 🚀 How to Run & Package
+##  How to Run & Package
 
 ### Compile and Launch in Development Mode
 ```bash
@@ -139,7 +139,7 @@ To compile and package the entire desktop application into a single executable F
 
 ---
 
-## 🔮 Future Roadmap & Features
+##  Future Roadmap & Features
 - **Integrated Courier APIs**: Automated shipping label generation and real-time transit tracking APIs (e.g., Aramex, DHL).
 - **Merchant Wallet & Payout Gateway**: Multi-currency escrow system and automated payment splits between marketplace operator and merchants.
 - **Mobile Companion Apps**: Lightweight iOS & Android apps for customers to browse catalog and for couriers to mark packages as delivered.
