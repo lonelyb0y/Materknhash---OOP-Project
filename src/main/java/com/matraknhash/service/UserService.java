@@ -32,6 +32,16 @@ public class UserService {
         try (Connection c = ConnectionFactory.get()) {
             c.setAutoCommit(false);
             try {
+                // Clear order history referencing this user to prevent foreign key errors
+                exec(c, "DELETE FROM sale_items WHERE sale_id IN (SELECT id FROM sales WHERE seller_id = ?)", id);
+                exec(c, "DELETE FROM sale_items WHERE sale_id IN (SELECT id FROM sales WHERE buyer_id = ?)", id);
+                exec(c, "DELETE FROM sales WHERE seller_id = ?", id);
+                exec(c, "DELETE FROM sales WHERE buyer_id = ?", id);
+                
+                // Clear purchase history referencing this user
+                exec(c, "DELETE FROM purchase_items WHERE purchase_id IN (SELECT id FROM purchases WHERE user_id = ?)", id);
+                exec(c, "DELETE FROM purchases WHERE user_id = ?", id);
+
                 exec(c, "DELETE FROM service_requests WHERE customer_id = ?", id);
                 exec(c, "DELETE FROM service_requests WHERE offer_id IN " +
                        "(SELECT id FROM service_offers WHERE center_id = ?)", id);

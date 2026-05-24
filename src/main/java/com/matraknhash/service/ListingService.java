@@ -23,12 +23,10 @@ public class ListingService {
      */
     public Part submit(Part p, int sellerId) {
         p.setSellerId(sellerId);
-        if (isTrustedSupplier(p.getSupplierId())) {
-            p.setListingStatus(Part.ListingStatus.LIVE);
-            p.setListingReason("Auto-approved: trusted supplier");
-        } else {
-            p.setListingStatus(Part.ListingStatus.PENDING_EMPLOYEE);
-        }
+        // For security and data quality, all external seller listings must go through 
+        // the employee review pipeline, preventing bypasses by claiming a trusted supplier.
+        p.setListingStatus(Part.ListingStatus.PENDING_EMPLOYEE);
+        p.setListingReason("Awaiting employee review");
         return partDao.insert(p);
     }
 

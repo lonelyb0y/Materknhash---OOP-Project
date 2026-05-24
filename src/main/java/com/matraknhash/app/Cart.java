@@ -22,10 +22,24 @@ public final class Cart {
         return items.stream().mapToDouble(SaleItem::getSubtotal).sum();
     }
 
-    /** Add or merge a part. Throws if mixing sellers. */
+    /** Add or merge a part. Throws if mixing sellers or exceeding stock. */
     public void add(Part p, int qty) {
         if (sellerId != null && p.getSellerId() != null && !sellerId.equals(p.getSellerId()))
             throw new IllegalStateException("Cart already contains items from another seller. Empty the cart first.");
+        
+        // Verify available stock
+        int currentInCart = 0;
+        for (SaleItem existing : items) {
+            if (existing.getPartId() == p.getId()) {
+                currentInCart = existing.getQuantity();
+                break;
+            }
+        }
+        if (currentInCart + qty > p.getQuantity()) {
+            throw new IllegalArgumentException("Cannot add " + qty + " item(s). Only " 
+                    + p.getQuantity() + " available in stock (you have " + currentInCart + " in cart).");
+        }
+
         if (sellerId == null) {
             sellerId   = p.getSellerId();
             sellerName = null; // resolved by the UI controller when needed

@@ -193,10 +193,22 @@ public class CatalogController {
                     ButtonType.OK, ButtonType.CANCEL);
             if (a.showAndWait().filter(b -> b == ButtonType.OK).isPresent()) {
                 Session.cart().clear();
-                Session.cart().add(p, 1);
-                refreshCartBadge();
+                try {
+                    Session.cart().add(p, 1);
+                    refreshCartBadge();
+                } catch (IllegalArgumentException ex2) {
+                    showStockError(ex2.getMessage());
+                }
             }
+        } catch (IllegalArgumentException ex) {
+            showStockError(ex.getMessage());
         }
+    }
+
+    private void showStockError(String msg) {
+        Alert a = new Alert(Alert.AlertType.WARNING, msg, ButtonType.OK);
+        a.setHeaderText("Out of Stock / Invalid Quantity");
+        a.showAndWait();
     }
 
     private void refreshCartBadge() {
