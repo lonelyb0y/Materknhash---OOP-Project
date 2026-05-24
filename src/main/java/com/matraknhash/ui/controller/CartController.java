@@ -23,6 +23,7 @@ public class CartController {
     @FXML private TableColumn<SaleItem, Void>   colDel;
     @FXML private Label sellerLine, lblTotal, status;
     @FXML private Button btnCheckout, btnEmpty;
+    @FXML private TextField addressField;
 
     private final NumberFormat money = NumberFormat.getNumberInstance(Locale.US);
 
@@ -70,8 +71,15 @@ public class CartController {
         User me = Session.current();
         if (me == null) { showError("Please log in again."); return; }
         if (Session.cart().sellerId() == null) { showError("Cart is empty."); return; }
-
+ 
+        String addr = addressField.getText() == null ? "" : addressField.getText().trim();
+        if (addr.isEmpty()) {
+            showError("❌ Please enter a valid shipping address to place the order.");
+            return;
+        }
+ 
         Sale s = new Sale(Session.cart().sellerId(), Session.cart().sellerName());
+        s.setShippingAddress(addr);
         for (SaleItem it : Session.cart().items()) s.addItem(new SaleItem(
                 it.getPartId(), it.getPartSku(), it.getPartName(), it.getQuantity(), it.getUnitPrice()));
         try {

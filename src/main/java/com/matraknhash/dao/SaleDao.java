@@ -142,7 +142,7 @@ public class SaleDao {
     /** Returns sales by status (most recent first), with their line items eagerly loaded. */
     public List<Sale> findByStatus(Sale.Status status) {
         String sql = "SELECT s.id, s.seller_id, s.total, s.status, s.approver_id, s.approved_at, " +
-                     "       s.reject_reason, s.created_at, u.full_name AS seller_name, " +
+                     "       s.reject_reason, s.created_at, s.shipping_address, s.courier_name, s.tracking_number, u.full_name AS seller_name, " +
                      "       au.full_name AS approver_name " +
                      "FROM sales s " +
                      "LEFT JOIN users u  ON u.id  = s.seller_id " +
@@ -168,6 +168,9 @@ public class SaleDao {
                     if (createdAt != null) s.setCreatedAt(createdAt.toLocalDateTime());
                     s.setSellerName(rs.getString("seller_name"));
                     s.setApproverName(rs.getString("approver_name"));
+                    s.setShippingAddress(rs.getString("shipping_address"));
+                    s.setCourierName(rs.getString("courier_name"));
+                    s.setTrackingNumber(rs.getString("tracking_number"));
                     out.add(s);
                 }
             }
@@ -214,11 +217,12 @@ public class SaleDao {
             c.setAutoCommit(false);
             try {
                 try (PreparedStatement ps = c.prepareStatement(
-                        "INSERT INTO sales(seller_id,total,status,buyer_id) VALUES (?,?,'PLACED',?)",
+                        "INSERT INTO sales(seller_id,total,status,buyer_id,shipping_address) VALUES (?,?,'PLACED',?,?)",
                         Statement.RETURN_GENERATED_KEYS)) {
                     ps.setInt(1, sale.getSellerId());
                     ps.setDouble(2, sale.getTotal());
                     ps.setInt(3, buyerId);
+                    ps.setString(4, sale.getShippingAddress());
                     ps.executeUpdate();
                     try (ResultSet keys = ps.getGeneratedKeys()) {
                         if (keys.next()) sale.setId(keys.getInt(1));
@@ -262,6 +266,22 @@ public class SaleDao {
             }
         } catch (SQLException e) { throw new DaoException("sellerAck failed: " + e.getMessage(), e); }
     }
+ 
+    /** Seller ships the order with tracking info: PLACED -> SHIPPED. */
+    public void shipOrder(int saleId, String courierName, String trackingNumber) {
+        try (Connection c = ConnectionFactory.borrow()) {
+            String st = readStatus(c, saleId);
+            if (!"PLACED".equals(st) && !"SELLER_ACK".equals(st))
+                throw new DaoException("Order #" + saleId + " is " + st + ", cannot ship");
+            try (PreparedStatement ps = c.prepareStatement(
+                    "UPDATE sales SET status='SHIPPED', seller_ack_at=NOW(), courier_name=?, tracking_number=? WHERE id=?")) {
+                ps.setString(1, courierName);
+                ps.setString(2, trackingNumber);
+                ps.setInt(3, saleId);
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) { throw new DaoException("shipOrder failed: " + e.getMessage(), e); }
+    }
 
     /** Admin approves a seller-acked order: deduct stock + flip to APPROVED. Atomic. */
     public void approveOrder(int saleId, int adminId) {
@@ -269,7 +289,7 @@ public class SaleDao {
             c.setAutoCommit(false);
             try {
                 String st = readStatus(c, saleId);
-                if (!"SELLER_ACK".equals(st) && !"PLACED".equals(st))
+                if (!"SELLER_ACK".equals(st) && !"PLACED".equals(st) && !"SHIPPED".equals(st))
                     throw new DaoException("Order #" + saleId + " is " + st + ", cannot approve");
 
                 try (PreparedStatement load = c.prepareStatement(
@@ -357,6 +377,9 @@ public class SaleDao {
                     if (createdAt != null) s.setCreatedAt(createdAt.toLocalDateTime());
                     Timestamp ackAt = rs.getTimestamp("seller_ack_at");
                     if (ackAt != null) s.setSellerAckAt(ackAt.toLocalDateTime());
+                    s.setShippingAddress(rs.getString("shipping_address"));
+                    s.setCourierName(rs.getString("courier_name"));
+                    s.setTrackingNumber(rs.getString("tracking_number"));
                     try { s.setSellerName(rs.getString("seller_name")); } catch (SQLException ignore) {}
                     try { s.setBuyerName(rs.getString("buyer_name"));   } catch (SQLException ignore) {}
                     out.add(s);

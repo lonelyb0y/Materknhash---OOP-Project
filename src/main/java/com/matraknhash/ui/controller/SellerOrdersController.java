@@ -31,7 +31,9 @@ public class SellerOrdersController {
     @FXML private TableColumn<SaleItem, Number> colLqty, colLprc, colLsub;
 
     @FXML private Label lblHeader, lblCount, status;
-    @FXML private Button btnPrint;
+    @FXML private Label lblAddress;
+    @FXML private TextField txtCourier, txtTracking;
+    @FXML private Button btnShip;
 
     private final ObservableList<Sale>     orders = FXCollections.observableArrayList();
     private final ObservableList<SaleItem> lines  = FXCollections.observableArrayList();
@@ -76,7 +78,10 @@ public class SellerOrdersController {
         if (incoming.isEmpty()) {
             lblHeader.setText("No incoming orders right now.");
             lines.clear();
-            btnPrint.setDisable(true);
+            btnShip.setDisable(true);
+            lblAddress.setText("");
+            txtCourier.setText("");
+            txtTracking.setText("");
         } else orderTable.getSelectionModel().selectFirst();
     }
 
@@ -85,19 +90,42 @@ public class SellerOrdersController {
         lblHeader.setText("Order #" + s.getId() + " · " + s.getBuyerName() + " · "
                 + money.format(s.getTotal()) + " EGP");
         lines.setAll(s.getItems());
-        btnPrint.setDisable(s.getStatus() != Sale.Status.PLACED);
-        status.setText(s.getStatus() == Sale.Status.SELLER_ACK
-                ? "Already forwarded — waiting for admin approval."
-                : "");
+        
+        lblAddress.setText(s.getShippingAddress() == null || s.getShippingAddress().isBlank() 
+                ? "No address provided." : s.getShippingAddress());
+        
+        boolean canShip = (s.getStatus() == Sale.Status.PLACED || s.getStatus() == Sale.Status.SELLER_ACK);
+        btnShip.setDisable(!canShip);
+        txtCourier.setEditable(canShip);
+        txtTracking.setEditable(canShip);
+        
+        if (!canShip) {
+            txtCourier.setText(s.getCourierName() == null ? "" : s.getCourierName());
+            txtTracking.setText(s.getTrackingNumber() == null ? "" : s.getTrackingNumber());
+            status.setText("Order already shipped and forwarded — waiting for admin approval.");
+        } else {
+            txtCourier.setText("");
+            txtTracking.setText("");
+            status.setText("");
+        }
     }
 
     @FXML
-    private void onPrint() {
+    private void onShip() {
         Sale sel = orderTable.getSelectionModel().getSelectedItem();
         if (sel == null) return;
+        
+        String courier = txtCourier.getText() == null ? "" : txtCourier.getText().trim();
+        String tracking = txtTracking.getText() == null ? "" : txtTracking.getText().trim();
+        
+        if (courier.isEmpty() || tracking.isEmpty()) {
+            status.setText("❌ Courier Name and Tracking Number are required to ship this order.");
+            return;
+        }
+        
         try {
-            AppContext.get().saleService.sellerAck(sel.getId());
-            status.setText("Printed receipt for order #" + sel.getId() + ". Admin will finalise it.");
+            AppContext.get().saleService.shipOrder(sel.getId(), courier, tracking);
+            status.setText("✅ Order #" + sel.getId() + " successfully shipped via " + courier + "!");
             refresh();
         } catch (DaoException e) {
             status.setText("Error: " + e.getMessage());
@@ -106,8 +134,10 @@ public class SellerOrdersController {
 
     private static String pretty(Sale.Status s) {
         return switch (s) {
-            case PLACED     -> "New (print receipt)";
-            case SELLER_ACK -> "Forwarded to admin";
+            case PLACED     -> "New";
+            case SELLER_ACK -> "Preparing";
+            case SHIPPED    -> "Shipped (out for delivery)";
+            case APPROVED   -> "Delivered & Confirmed";
             default         -> s.name();
         };
     }

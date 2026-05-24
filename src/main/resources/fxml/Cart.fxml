@@ -21,7 +21,12 @@
             <TableColumn fx:id="colDel"   text=""          prefWidth="60"/>
         </columns>
     </TableView>
-
+ 
+    <VBox spacing="4">
+        <Label text="Shipping Address" styleClass="muted" style="-fx-font-weight: bold;"/>
+        <TextField fx:id="addressField" promptText="Enter your shipping address (e.g. 12 El Nasr St, Maadi, Cairo)..."/>
+    </VBox>
+ 
     <HBox alignment="CENTER_RIGHT" spacing="14">
         <Label text="Subtotal:" styleClass="muted"/>
         <Label fx:id="lblTotal" text="0 EGP" styleClass="page-h2"/>

@@ -88,7 +88,8 @@ public class MyOrdersController {
         return switch (s) {
             case PLACED            -> "Awaiting seller";
             case SELLER_ACK        -> "Preparing (seller)";
-            case APPROVED          -> "Confirmed";
+            case SHIPPED           -> "Shipped & On the Way 🚚";
+            case APPROVED          -> "Confirmed & Delivered";
             case REJECTED          -> "Rejected";
             case CANCELLED         -> "Cancelled";
             case RETURN_REQUESTED  -> "Return requested";
@@ -97,12 +98,15 @@ public class MyOrdersController {
             default                -> s.name();
         };
     }
-
+ 
     private static String humanStatus(Sale s) {
         return switch (s.getStatus()) {
             case PLACED     -> "Waiting for the seller to acknowledge your order.";
-            case SELLER_ACK -> "The seller has accepted your order and an admin will finalize it.";
-            case APPROVED   -> "Your order is confirmed.";
+            case SELLER_ACK -> "The seller has accepted your order and is currently preparing your package.";
+            case SHIPPED    -> "🚚 Your order is out for delivery! Shipped via " + (s.getCourierName() == null ? "courier" : s.getCourierName())
+                    + " with Tracking Number: " + (s.getTrackingNumber() == null ? "N/A" : s.getTrackingNumber())
+                    + ". Delivering to: " + (s.getShippingAddress() == null || s.getShippingAddress().isBlank() ? "your profile address" : s.getShippingAddress()) + ".";
+            case APPROVED   -> "Your order has been successfully delivered and confirmed.";
             case REJECTED   -> "The admin rejected this order" +
                     (s.getRejectReason() == null || s.getRejectReason().isBlank() ? "." : ": " + s.getRejectReason());
             default         -> "";

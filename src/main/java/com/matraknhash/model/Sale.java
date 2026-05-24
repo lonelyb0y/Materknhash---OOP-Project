@@ -22,6 +22,7 @@ public class Sale implements Serializable {
         // --- marketplace states (M1) ---
         PLACED,             // customer just clicked "Buy"
         SELLER_ACK,         // seller "printed the receipt" / is shipping it
+        SHIPPED,            // seller has shipped the order 🚚
         CANCELLED,          // either side aborted before approval
         RETURN_REQUESTED,   // customer wants the item back
         RETURN_ACK,         // seller acknowledged the return
@@ -45,6 +46,10 @@ public class Sale implements Serializable {
     private String  returnReason;
     private LocalDateTime returnRequestedAt;
     private LocalDateTime returnApprovedAt;
+    // --- shipping fields (M6) ---
+    private String  shippingAddress;
+    private String  courierName;
+    private String  trackingNumber;
     private final List<SaleItem> items = new ArrayList<>();
 
     public Sale() {}
@@ -75,7 +80,10 @@ public class Sale implements Serializable {
     public String getReturnReason() { return returnReason; }
     public LocalDateTime getReturnRequestedAt() { return returnRequestedAt; }
     public LocalDateTime getReturnApprovedAt() { return returnApprovedAt; }
-
+    public String getShippingAddress() { return shippingAddress; }
+    public String getCourierName() { return courierName; }
+    public String getTrackingNumber() { return trackingNumber; }
+ 
     public void setId(int id) { this.id = id; }
     public void setSellerId(int sellerId) { this.sellerId = sellerId; }
     public void setSellerName(String sellerName) { this.sellerName = sellerName; }
@@ -92,6 +100,9 @@ public class Sale implements Serializable {
     public void setReturnReason(String returnReason) { this.returnReason = returnReason; }
     public void setReturnRequestedAt(LocalDateTime t) { this.returnRequestedAt = t; }
     public void setReturnApprovedAt(LocalDateTime t) { this.returnApprovedAt = t; }
+    public void setShippingAddress(String s) { this.shippingAddress = s; }
+    public void setCourierName(String s) { this.courierName = s; }
+    public void setTrackingNumber(String s) { this.trackingNumber = s; }
 
     public void recomputeTotal() {
         total = items.stream().mapToDouble(SaleItem::getSubtotal).sum();

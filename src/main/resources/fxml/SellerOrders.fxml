@@ -41,9 +41,23 @@
                         <TableColumn fx:id="colLsub"  text="Subtotal" prefWidth="100"/>
                     </columns>
                 </TableView>
+                <VBox spacing="4" fx:id="shipForm" style="-fx-padding: 6 0 6 0;">
+                    <Label text="📍 Shipping Address:" style="-fx-font-weight: bold;"/>
+                    <Label fx:id="lblAddress" wrapText="true" text="No address provided." style="-fx-text-fill: #0f172a;"/>
+                    <HBox spacing="10">
+                        <VBox spacing="2" HBox.hgrow="ALWAYS">
+                            <Label text="Courier Name" styleClass="muted" style="-fx-font-size: 11px;"/>
+                            <TextField fx:id="txtCourier" promptText="e.g. DHL, Aramex"/>
+                        </VBox>
+                        <VBox spacing="2" HBox.hgrow="ALWAYS">
+                            <Label text="Tracking Number" styleClass="muted" style="-fx-font-size: 11px;"/>
+                            <TextField fx:id="txtTracking" promptText="e.g. TRK129847192"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
                 <HBox spacing="10" alignment="CENTER_RIGHT">
-                    <Button fx:id="btnPrint" text="🖨  Print receipt &amp; forward to admin"
-                            onAction="#onPrint" styleClass="btn-primary" disable="true"/>
+                    <Button fx:id="btnShip" text="🚚  Ship Order"
+                            onAction="#onShip" styleClass="btn-primary" disable="true"/>
                 </HBox>
                 <Label fx:id="status" wrapText="true" styleClass="muted"/>
             </VBox>

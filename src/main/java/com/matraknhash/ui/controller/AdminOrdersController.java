@@ -97,7 +97,11 @@ public class AdminOrdersController {
         lines.setAll(s.getItems());
         btnApprove.setDisable(false);
         btnReject.setDisable(false);
-        status.setText("");
+        
+        String info = "📍 Shipping Address: " + (s.getShippingAddress() == null || s.getShippingAddress().isBlank() ? "N/A" : s.getShippingAddress()) + "\n"
+                + "🚚 Shipped Via: " + (s.getCourierName() == null ? "N/A" : s.getCourierName()) 
+                + " · Tracking Number: " + (s.getTrackingNumber() == null ? "N/A" : s.getTrackingNumber());
+        status.setText(info);
     }
 
     @FXML

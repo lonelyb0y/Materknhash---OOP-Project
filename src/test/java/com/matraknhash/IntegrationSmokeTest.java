@@ -167,6 +167,38 @@ class IntegrationSmokeTest {
         assertTrue(ctx.authService.login("nobody", "x").isFail());
     }
 
+    @Test @Order(9)
+    void marketplaceOrderShipAndApproveFlow() throws SQLException {
+        List<Part> stocked = ctx.partService.all().stream()
+                .filter(p -> p.getQuantity() >= 1).toList();
+        Assumptions.assumeFalse(stocked.isEmpty(), "No parts available, skipping marketplace test.");
+        Part target = stocked.get(0);
+        int stockBefore = target.getQuantity();
+ 
+        Sale sale = new Sale(3, "Default Seller");
+        sale.setShippingAddress("Test Address 123");
+        sale.addItem(new SaleItem(target.getId(), target.getSku(), target.getName(), 1, target.getSellPrice()));
+ 
+        Sale placed = ctx.saleService.placeOrder(sale, 1);
+        assertTrue(placed.getId() > 0);
+        assertEquals(Sale.Status.PLACED, placed.getStatus());
+        assertEquals("Test Address 123", placed.getShippingAddress());
+ 
+        ctx.saleService.shipOrder(placed.getId(), "Test Courier", "TRK-999-888");
+        
+        List<Sale> pendingAdmin = ctx.saleService.pendingAdminOrders();
+        Sale found = pendingAdmin.stream().filter(s -> s.getId() == placed.getId()).findFirst().orElseThrow();
+        assertEquals(Sale.Status.SHIPPED, found.getStatus());
+        assertEquals("Test Courier", found.getCourierName());
+        assertEquals("TRK-999-888", found.getTrackingNumber());
+ 
+        ctx.saleService.approveOrder(placed.getId(), 1);
+ 
+        Part after = ctx.partService.all().stream()
+                .filter(p -> p.getId() == target.getId()).findFirst().orElseThrow();
+        assertEquals(stockBefore - 1, after.getQuantity());
+    }
+
     // ---------- helpers ----------
     private static void assertCount(Statement st, String table, int expected) throws SQLException {
         assertEquals(expected, countOf(st, table), table + " row count mismatch");

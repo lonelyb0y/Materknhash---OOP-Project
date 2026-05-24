@@ -21,6 +21,7 @@ public class SaleService {
     // --- marketplace order flow (M4) ---
     public Sale placeOrder(Sale s, int buyerId)               { s.recomputeTotal(); return dao.placeOrder(s, buyerId); }
     public void sellerAck(int saleId)                          { dao.sellerAck(saleId); }
+    public void shipOrder(int saleId, String courierName, String trackingNumber) { dao.shipOrder(saleId, courierName, trackingNumber); }
     public void approveOrder(int saleId, int adminId)          { dao.approveOrder(saleId, adminId); }
     public void rejectOrder(int saleId, int adminId, String r) { dao.rejectOrder(saleId, adminId, r); }
     public List<Sale> ordersByBuyer(int buyerId)               { return dao.findByBuyer(buyerId); }
@@ -32,7 +33,7 @@ public class SaleService {
                 Sale.Status.APPROVED, Sale.Status.REJECTED, Sale.Status.CANCELLED);
     }
     public List<Sale> pendingAdminOrders() {
-        return dao.findByStatus(Sale.Status.SELLER_ACK);
+        return dao.findByStatus(Sale.Status.SHIPPED);
     }
     public double totalSalesLast30Days()             { return dao.totalSalesSince(LocalDateTime.now().minusDays(30)); }
     public double totalProfitLast30Days()            { return dao.totalProfitSince(LocalDateTime.now().minusDays(30)); }

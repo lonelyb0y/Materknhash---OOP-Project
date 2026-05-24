@@ -205,3 +205,12 @@ CREATE INDEX idx_so_status   ON service_offers(status);
 CREATE INDEX idx_sr_customer ON service_requests(customer_id);
 CREATE INDEX idx_sr_offer    ON service_requests(offer_id);
 CREATE INDEX idx_sr_status   ON service_requests(status);
+
+-- =====================================================================
+-- SHIPPING & DELIVERY MIGRATION (M6)
+-- Add shipping details and courier tracking to sales (orders)
+-- =====================================================================
+ALTER TABLE sales ADD COLUMN shipping_address VARCHAR(255) NULL;
+ALTER TABLE sales ADD COLUMN courier_name VARCHAR(120) NULL;
+ALTER TABLE sales ADD COLUMN tracking_number VARCHAR(120) NULL;
+
