@@ -6,16 +6,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-/**
- * One-shot utility: wipes all transactional/seed data and removes a named
- * problem account. Schema and the three default users (admin/employee/seller)
- * survive so the app still boots cleanly.
- *
- * Usage:
- *   mvn -q compile exec:java \
- *       -Dexec.mainClass=com.matraknhash.tools.DbWipe \
- *       -Dexec.classpathScope=runtime
- */
+
 public final class DbWipe {
 
     public static void main(String[] args) throws SQLException {

@@ -45,8 +45,8 @@ public class MainShellController {
             // Each role lands on the screen most useful to them.
             switch (u.getRole()) {
                 case CUSTOMER       -> showCatalog();
-                case SELLER         -> showDashboard();
-                case SERVICE_CENTER -> showDashboard();
+                case SELLER         -> showMyListings();
+                case SERVICE_CENTER -> showMyOffers();
                 default             -> showDashboard();
             }
         } else {
@@ -54,12 +54,7 @@ public class MainShellController {
         }
     }
 
-    /**
-     * Per-role sidebar visibility. The marketplace pivot collapses things by
-     * role: customers see only the storefront, sellers manage their own
-     * listings + orders, service centers manage offers + bookings, employees
-     * and admins drive the approval pipelines.
-     */
+   
     private void applyRoleVisibility(Role role) {
         boolean isCustomer = role == Role.CUSTOMER;
         boolean isSeller   = role == Role.SELLER;
@@ -68,8 +63,8 @@ public class MainShellController {
         boolean isAdmin    = role == Role.ADMIN;
         boolean isStaff    = isAdmin || isEmployee;
 
-        // Dashboard is a back-office KPI screen for staff, sellers, and centers.
-        toggle(navDashboard,      isStaff || isSeller || isCenter);
+        // Dashboard is a back-office KPI screen, only staff need it.
+        toggle(navDashboard,      isStaff);
 
         // Customer
         toggle(navCatalog,        isCustomer);
@@ -114,19 +109,19 @@ public class MainShellController {
     @FXML private void showServices()       { swap("Services.fxml",           "Service Centers",        navServices); }
     @FXML private void showMyBookings()     { swap("MyBookings.fxml",         "My Service Bookings",    navMyBookings); }
 
-    // Seller (pure JavaFX views — no FXML)
-    @FXML private void showMyListings()     { swap(new MyListingsController(),       "My Listings",            navMyListings); }
-    @FXML private void showIncoming()       { swap(new SellerOrdersController(),     "Incoming Orders",        navIncoming); }
+    // Seller
+    @FXML private void showMyListings()     { swap("MyListings.fxml",         "My Listings",            navMyListings); }
+    @FXML private void showIncoming()       { swap("SellerOrders.fxml",       "Incoming Orders",        navIncoming); }
 
     // Service Center
-    @FXML private void showMyOffers()       { swap(new MyServiceOffersController(),  "My Service Offers",      navMyOffers); }
+    @FXML private void showMyOffers()       { swap("MyServiceOffers.fxml",    "My Service Offers",      navMyOffers); }
     @FXML private void showCenterBookings() { swap("CenterBookings.fxml",     "Incoming Bookings",      navCenterBookings); }
 
     // Staff
     @FXML private void showParts()          { swap("Parts.fxml",              "Spare Parts",            navParts); }
     @FXML private void showListingsReview() { swap("ListingReview.fxml",      "Listings Review",        navListingsReview); }
     @FXML private void showServiceReview()  { swap("ServiceOffersReview.fxml","Service Offers Review",  navServiceReview); }
-    @FXML private void showOrdersAdmin()    { swap("AdminOrders.fxml",        "Orders History",         navOrdersAdmin); }
+    @FXML private void showOrdersAdmin()    { swap("AdminOrders.fxml",        "Approve Orders",         navOrdersAdmin); }
     @FXML private void showPurchases()      { swap("Purchases.fxml",          "Purchases",              navPurchases); }
     @FXML private void showSuppliers()      { swap("Suppliers.fxml",          "Suppliers",              navSuppliers); }
     @FXML private void showReports()        { swap("Reports.fxml",            "Reports & Analytics",    navReports); }
@@ -158,22 +153,6 @@ public class MainShellController {
             while (root.getCause() != null) root = root.getCause();
             new Alert(Alert.AlertType.ERROR,
                     "Failed to load " + fxml + ":\n" + root.getClass().getSimpleName() + ": " + root.getMessage())
-                    .showAndWait();
-        }
-    }
-
-    /** Swap in a pre-built JavaFX node (used for views written in pure Java, no FXML). */
-    private void swap(Node node, String title, Button active) {
-        try {
-            contentArea.getChildren().setAll(node);
-            pageTitle.setText(title);
-            setActive(active);
-        } catch (Exception e) {
-            e.printStackTrace();
-            Throwable root = e;
-            while (root.getCause() != null) root = root.getCause();
-            new Alert(Alert.AlertType.ERROR,
-                    "Failed to load " + title + ":\n" + root.getClass().getSimpleName() + ": " + root.getMessage())
                     .showAndWait();
         }
     }

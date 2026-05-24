@@ -6,24 +6,8 @@ import com.matraknhash.model.Part;
 import com.matraknhash.model.Supplier;
 
 import java.util.List;
+import java.util.Optional;
 
-/**
- * Listing approval pipeline (M3).
- *
- * <pre>
- *   Seller submits a listing
- *      │
- *      ├── supplier is trusted ───────────────────────────────▶ LIVE
- *      │                                                        (instant)
- *      └── otherwise ─────▶ PENDING_EMPLOYEE
- *                              │
- *                              ├── employee approves ─▶ PENDING_ADMIN
- *                              │                          │
- *                              │                          ├─ admin approves ──▶ LIVE
- *                              │                          └─ admin rejects  ──▶ REJECTED
- *                              └── employee rejects ──▶ REJECTED
- * </pre>
- */
 public class ListingService {
 
     private final PartDao partDao;
@@ -35,8 +19,7 @@ public class ListingService {
     }
 
     /**
-     * Seller creates a new listing. Trusted-supplier listings go straight to LIVE,
-     * otherwise they enter the employee review queue.
+     * Seller creates a new listing.
      */
     public Part submit(Part p, int sellerId) {
         p.setSellerId(sellerId);
@@ -46,6 +29,13 @@ public class ListingService {
         } else {
             p.setListingStatus(Part.ListingStatus.PENDING_EMPLOYEE);
         }
+        return partDao.insert(p);
+    }
+
+    /** Seller can also save a draft to come back to later. */
+    public Part saveDraft(Part p, int sellerId) {
+        p.setSellerId(sellerId);
+        p.setListingStatus(Part.ListingStatus.DRAFT);
         return partDao.insert(p);
     }
 
@@ -89,10 +79,20 @@ public class ListingService {
         }).orElse(false);
     }
 
+    /** Hide a LIVE listing without deleting (e.g. seller pauses sales). */
+    public boolean hide(int partId) {
+        return partDao.findById(partId).map(p -> {
+            if (p.getListingStatus() != Part.ListingStatus.LIVE) return false;
+            p.setListingStatus(Part.ListingStatus.HIDDEN);
+            return partDao.update(p);
+        }).orElse(false);
+    }
+
     public List<Part> liveCatalog()       { return partDao.findLive(); }
     public List<Part> bySeller(int sid)   { return partDao.findBySeller(sid); }
     public List<Part> pendingEmployee()   { return partDao.findByListingStatus(Part.ListingStatus.PENDING_EMPLOYEE); }
     public List<Part> pendingAdmin()      { return partDao.findByListingStatus(Part.ListingStatus.PENDING_ADMIN); }
+    public Optional<Part> find(int id)    { return partDao.findById(id); }
 
     private boolean isTrustedSupplier(Integer supplierId) {
         if (supplierId == null) return false;

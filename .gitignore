@@ -6,7 +6,6 @@ target/
 *.iml
 .vscode/
 .settings/
-.windsurf/
 .project
 .classpath
 .DS_Store

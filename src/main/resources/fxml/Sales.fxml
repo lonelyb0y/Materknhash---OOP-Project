@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import com.matraknhash.model.Part?>
+
+<HBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.matraknhash.ui.controller.SalesController"
+      spacing="18">
+
+    <!-- Left/main: invoice -->
+    <VBox styleClass="card" HBox.hgrow="ALWAYS" spacing="12">
+        <Label text="Customer Info" styleClass="section-title"/>
+        <HBox spacing="10">
+            <TextField fx:id="customerName"  promptText="Customer Name"  HBox.hgrow="ALWAYS"/>
+            <TextField fx:id="customerPhone" promptText="Phone"          HBox.hgrow="ALWAYS"/>
+        </HBox>
+
+        <Label text="Invoice Items" styleClass="section-title"/>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <ComboBox fx:id="partCombo" promptText="Select part" prefWidth="280"/>
+            <TextField fx:id="qtyField" promptText="Qty" prefWidth="80"/>
+            <Button text="+ Add" styleClass="btn-secondary" onAction="#onAddItem"/>
+            <Region HBox.hgrow="ALWAYS"/>
+        </HBox>
+
+        <TableView fx:id="itemsTable" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colPart"  text="Part"     prefWidth="260"/>
+                <TableColumn fx:id="colPrice" text="Price"    prefWidth="100"/>
+                <TableColumn fx:id="colQty"   text="Quantity" prefWidth="100"/>
+                <TableColumn fx:id="colSub"   text="Subtotal" prefWidth="120"/>
+                <TableColumn fx:id="colDel"   text=""         prefWidth="60"/>
+            </columns>
+        </TableView>
+    </VBox>
+
+    <!-- Right: summary panel -->
+    <VBox styleClass="card" minWidth="320" maxWidth="360" spacing="14">
+        <Label text="Invoice Summary" styleClass="section-title"/>
+
+        <HBox><Label text="Invoice No." styleClass="muted"/><Region HBox.hgrow="ALWAYS"/><Label fx:id="lblInvNo" text="INV-NEW"/></HBox>
+        <HBox><Label text="Date"        styleClass="muted"/><Region HBox.hgrow="ALWAYS"/><Label fx:id="lblDate" text=""/></HBox>
+
+        <Region prefHeight="6"/>
+        <HBox><Label text="Subtotal" styleClass="muted"/><Region HBox.hgrow="ALWAYS"/><Label fx:id="lblSubtotal" text="0.00 EGP"/></HBox>
+        <HBox><Label text="Tax (14%)" styleClass="muted"/><Region HBox.hgrow="ALWAYS"/><Label fx:id="lblTax" text="0.00 EGP"/></HBox>
+        <HBox><Label text="Total" styleClass="section-title"/><Region HBox.hgrow="ALWAYS"/><Label fx:id="lblTotal" text="0.00 EGP" styleClass="section-title"/></HBox>
+
+        <Label fx:id="status" styleClass="muted" managed="false" visible="false"/>
+
+        <HBox spacing="8">
+            <padding><Insets top="10"/></padding>
+            <Button text="Clear" styleClass="btn-secondary" onAction="#onClear"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Save Invoice" styleClass="btn-primary" onAction="#onSaveInvoice"/>
+        </HBox>
+    </VBox>
+</HBox>

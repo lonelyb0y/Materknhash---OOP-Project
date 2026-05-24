@@ -5,18 +5,7 @@ import com.matraknhash.model.SaleItem;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-/**
- * Per-session shopping cart for the customer marketplace flow.
- *
- * Lives on {@link Session} alongside the current user, so it survives screen
- * navigation but resets at logout. Backed by an {@link ObservableList} so the
- * checkout UI updates reactively as items are added/removed.
- *
- * Constraint: a single cart can only contain items from ONE seller at a time
- * (the marketplace order model in `sales` has a single seller_id per row).
- * Adding a part from a different seller triggers a "clear cart" prompt in the
- * UI -- this class itself just exposes {@link #sellerId()}.
- */
+
 public final class Cart {
 
     private final ObservableList<SaleItem> items = FXCollections.observableArrayList();

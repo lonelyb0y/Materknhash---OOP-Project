@@ -15,9 +15,7 @@ import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Customer-facing browse + book screen for approved service offers.
- */
+
 public class ServicesController {
 
     @FXML private TableView<ServiceOffer> offerTable;

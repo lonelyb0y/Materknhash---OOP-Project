@@ -27,12 +27,7 @@ public class UserService {
 
     public boolean delete(int id) { return dao.delete(id); }
 
-    /**
-     * Hard-delete the user along with their listings + service offers +
-     * notifications, in one transaction. Fails (with a clear FK error) if
-     * any of those rows are still referenced from sales/orders -- in that
-     * case the caller should fall back to {@link #deactivate(int)}.
-     */
+   
     public boolean purgeUser(int id) {
         try (Connection c = ConnectionFactory.get()) {
             c.setAutoCommit(false);

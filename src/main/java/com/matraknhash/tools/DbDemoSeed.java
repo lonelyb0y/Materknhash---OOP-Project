@@ -6,15 +6,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-/**
- * Small "demo" dataset for screenshots/graphs: 3 suppliers + 10 parts owned
- * by the default seller (id=3). Idempotent thanks to {@code INSERT IGNORE}.
- *
- * Usage:
- *   mvn -q compile exec:java \
- *       -Dexec.mainClass=com.matraknhash.tools.DbDemoSeed \
- *       -Dexec.classpathScope=runtime
- */
+
 public final class DbDemoSeed {
 
     public static void main(String[] args) throws SQLException {

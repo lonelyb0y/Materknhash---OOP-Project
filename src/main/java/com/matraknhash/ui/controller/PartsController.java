@@ -18,7 +18,7 @@ import java.util.Optional;
 public class PartsController {
 
     @FXML private TextField skuField, nameField, categoryField, makeField, modelField,
-            costField, priceField, qtyField, minField, searchField;
+            costField, priceField, qtyField, minField, searchField, imgUrlField;
     @FXML private ComboBox<Supplier> supplierCombo;
     @FXML private Label formError;
 
@@ -84,6 +84,7 @@ public class PartsController {
         priceField.setText(String.valueOf(p.getSellPrice()));
         qtyField.setText(String.valueOf(p.getQuantity()));
         minField.setText(String.valueOf(p.getMinQty()));
+        imgUrlField.setText(p.getImageUrl() == null ? "" : p.getImageUrl());
         if (p.getSupplierId() != null) {
             supplierCombo.getItems().stream()
                     .filter(s -> s.getId() == p.getSupplierId()).findFirst()
@@ -103,7 +104,7 @@ public class PartsController {
     @FXML
     private void onClear() {
         editing = null;
-        for (TextField f : new TextField[]{skuField,nameField,categoryField,makeField,modelField,costField,priceField,qtyField,minField}) f.clear();
+        for (TextField f : new TextField[]{skuField,nameField,categoryField,makeField,modelField,costField,priceField,qtyField,minField,imgUrlField}) f.clear();
         supplierCombo.setValue(null);
         hideError();
     }
@@ -121,6 +122,7 @@ public class PartsController {
             p.setSellPrice(parseD(priceField.getText(), "price"));
             p.setQuantity(parseI(qtyField.getText(), "qty"));
             p.setMinQty(parseI(minField.getText(), "min qty"));
+            p.setImageUrl(blankToNull(imgUrlField.getText()));
             Supplier s = supplierCombo.getValue();
             p.setSupplierId(s == null ? null : s.getId());
 

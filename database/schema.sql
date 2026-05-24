@@ -131,6 +131,7 @@ ALTER TABLE users ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE';
 UPDATE users SET status='ACTIVE' WHERE status IS NULL OR status='';
 
 -- Parts become listings -- they have an owner (seller) and their own approval state.
+ALTER TABLE parts ADD COLUMN image_url             VARCHAR(255) NULL;
 ALTER TABLE parts ADD COLUMN seller_id            INT          NULL;
 ALTER TABLE parts ADD COLUMN listing_status       VARCHAR(20)  NOT NULL DEFAULT 'LIVE';
 ALTER TABLE parts ADD COLUMN listing_reason       VARCHAR(255) NULL;
@@ -204,24 +205,3 @@ CREATE INDEX idx_so_status   ON service_offers(status);
 CREATE INDEX idx_sr_customer ON service_requests(customer_id);
 CREATE INDEX idx_sr_offer    ON service_requests(offer_id);
 CREATE INDEX idx_sr_status   ON service_requests(status);
-
--- =====================================================================
--- REVIEWS MIGRATION (M6)
--- Customers can leave a star rating (1-5) and optional comment per order.
--- One review per sale — enforced by UNIQUE(sale_id).
--- =====================================================================
-CREATE TABLE IF NOT EXISTS reviews (
-    id          INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    sale_id     INT          NOT NULL,
-    customer_id INT          NOT NULL,
-    seller_id   INT          NOT NULL,
-    rating      INT          NOT NULL,
-    comment     VARCHAR(500) NULL,
-    created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT uq_review_sale UNIQUE (sale_id),
-    CONSTRAINT fk_review_sale     FOREIGN KEY (sale_id)     REFERENCES sales(id),
-    CONSTRAINT fk_review_customer FOREIGN KEY (customer_id) REFERENCES users(id),
-    CONSTRAINT fk_review_seller   FOREIGN KEY (seller_id)   REFERENCES users(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE INDEX idx_reviews_seller ON reviews(seller_id);

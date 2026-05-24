@@ -13,11 +13,7 @@ import javafx.scene.layout.HBox;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-/**
- * Admin queue of seller-account applications. Sellers self-register via the
- * sign-up screen and land here with status=PENDING_APPROVAL; this controller
- * lets the admin flip them to ACTIVE (login allowed) or SUSPENDED (rejected).
- */
+
 public class PendingSellersController {
 
     private static final DateTimeFormatter WHEN = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");

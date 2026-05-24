@@ -42,6 +42,8 @@
             <TextField fx:id="qtyField" promptText="Qty"     HBox.hgrow="ALWAYS"/>
             <TextField fx:id="minField" promptText="Min qty" HBox.hgrow="ALWAYS"/>
         </HBox>
+        <Label text="Image URL"/>
+        <TextField fx:id="imgUrlField" promptText="https://example.com/image.png"/>
 
         <Label fx:id="formError" styleClass="error-label" managed="false" visible="false"/>
 

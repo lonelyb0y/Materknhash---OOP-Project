@@ -1,5 +1,4 @@
 package com.matraknhash.ui.controller;
-
 import com.matraknhash.app.AppContext;
 import com.matraknhash.app.Session;
 import com.matraknhash.dao.DaoException;
@@ -12,15 +11,10 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
-
 import java.text.NumberFormat;
 import java.util.Locale;
 
-/**
- * Modal dialog driving the marketplace checkout. Reads the in-session cart,
- * lets the customer remove items, and on "Place Order" submits to the
- * SaleService where it lands as a PLACED order awaiting seller acknowledgement.
- */
+
 public class CartController {
 
     @FXML private TableView<SaleItem> table;
@@ -85,7 +79,8 @@ public class CartController {
             Session.cart().clear();
             // Show confirmation + close.
             Alert ok = new Alert(Alert.AlertType.INFORMATION,
-                    "Order #" + placed.getId() + " placed! The seller will receive it shortly and fulfill it. You can track it in 'My Orders'.",
+                    "Order #" + placed.getId() + " placed! The seller will receive it shortly and the admin " +
+                    "will finalise it. You can track it in 'My Orders'.",
                     ButtonType.OK);
             ok.setHeaderText("Order placed");
             ok.showAndWait();

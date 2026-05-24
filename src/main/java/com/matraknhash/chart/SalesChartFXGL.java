@@ -15,19 +15,10 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Executors;
 
-/**
- * Live Sales-Overview line chart for the dashboard.
- *
- * Uses FXGL's {@link com.almasb.fxgl.core.concurrent.Async} concurrency
- * utilities to refresh the chart on a scheduled cadence with real data
- * pulled from the database via SaleService. The chart updates whenever
- * new sales are recorded (no hardcoded/static data).
- */
+
 public class SalesChartFXGL extends StackPane {
 
-    private final com.matraknhash.app.AppContext ctx;
-    private final boolean isCenter;
-    private final Integer userId;
+    private final SaleService saleService;
     private final LineChart<String, Number> chart;
     private final XYChart.Series<String, Number> series = new XYChart.Series<>();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
@@ -37,10 +28,8 @@ public class SalesChartFXGL extends StackPane {
     });
     private ScheduledFuture<?> task;
 
-    public SalesChartFXGL(com.matraknhash.app.AppContext ctx, boolean isCenter, Integer userId) {
-        this.ctx = ctx;
-        this.isCenter = isCenter;
-        this.userId = userId;
+    public SalesChartFXGL(SaleService saleService) {
+        this.saleService = saleService;
         CategoryAxis x = new CategoryAxis();
         x.setLabel("Date");
         NumberAxis y = new NumberAxis();
@@ -53,11 +42,15 @@ public class SalesChartFXGL extends StackPane {
         chart.getData().add(series);
         chart.getStyleClass().add("sales-chart");
         getChildren().add(chart);
-        refreshNow();
+        
+        // Load initial data in background thread to prevent UI freezing
+        new Thread(this::refreshNow).start();
     }
 
     public void startLiveUpdates(int seconds) {
         if (task != null) return;
+    
+        Async.INSTANCE.startAsync(() -> {});
         task = scheduler.scheduleAtFixedRate(this::refreshNow, seconds, seconds, TimeUnit.SECONDS);
     }
 
@@ -68,12 +61,7 @@ public class SalesChartFXGL extends StackPane {
 
     private void refreshNow() {
         try {
-            Map<String, Double> daily;
-            if (isCenter) {
-                daily = ctx.serviceCenterService.dailyRevenue(userId, 30);
-            } else {
-                daily = userId == null ? ctx.saleService.dailyTotals(30) : ctx.saleService.dailyTotalsForSeller(30, userId);
-            }
+            Map<String, Double> daily = saleService.dailyTotals(30);
             Platform.runLater(() -> {
                 series.getData().clear();
                 daily.forEach((day, total) ->

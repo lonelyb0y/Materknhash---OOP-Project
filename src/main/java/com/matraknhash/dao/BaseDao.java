@@ -11,19 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Reusable generic DAO. The generic parameter T is the domain entity
- * managed by the concrete subclass.
- *
- * Subclasses provide:
- *   - table()      table name
- *   - columns()    insertable/updatable columns (no id)
- *   - extract()    ResultSet -> T
- *   - bindInsert() PreparedStatement &lt;- T (insert)
- *   - bindUpdate() PreparedStatement &lt;- T (update; last param is id)
- *
- * @param <T> the domain entity type
- */
 public abstract class BaseDao<T> {
 
     protected abstract String table();

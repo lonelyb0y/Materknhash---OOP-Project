@@ -31,13 +31,35 @@ public final class DatabaseBootstrap {
     public static void run() throws SQLException, IOException {
         ensureDatabase();
         try (Connection c = ConnectionFactory.get()) {
-            applySql(c, SCHEMA);
-            ensureDefaultUsers(c);
-            // Demo data is opt-in: run once with -Dmatraknhash.seed=on for a
-            // fresh demo machine, then leave it off so the operator's own data
-            // is never overwritten.
-            if ("on".equalsIgnoreCase(System.getProperty("matraknhash.seed", "off"))) {
-                applySql(c, SEED);
+            if (!isSchemaAlreadyApplied(c)) {
+                System.out.println("[DatabaseBootstrap] Initializing database schema...");
+                applySql(c, SCHEMA);
+                ensureDefaultUsers(c);
+                // Demo data is opt-in: run once with -Dmatraknhash.seed=on for a
+                // fresh demo machine, then leave it off so the operator's own data
+                // is never overwritten.
+                if ("on".equalsIgnoreCase(System.getProperty("matraknhash.seed", "off"))) {
+                    applySql(c, SEED);
+                }
+            } else {
+                System.out.println("[DatabaseBootstrap] Database schema already applied. Skipping initialization.");
+            }
+        }
+    }
+
+    private static boolean isSchemaAlreadyApplied(Connection c) {
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT 1 FROM information_schema.tables WHERE table_schema = ? AND table_name = 'users' LIMIT 1")) {
+            ps.setString(1, ConnectionFactory.dbName());
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            try (Statement st = c.createStatement();
+                 ResultSet rs = st.executeQuery("SELECT 1 FROM users LIMIT 1")) {
+                return true;
+            } catch (SQLException ex) {
+                return false;
             }
         }
     }

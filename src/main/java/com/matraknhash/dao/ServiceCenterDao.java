@@ -8,11 +8,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Plain JDBC DAO for the service-centres feature. Two tables, two domain
- * objects -- bundled here because they are always queried together via
- * joins for the UI.
- */
+
 public class ServiceCenterDao {
 
     // ---------------------------------------------------------- offers ----
@@ -80,31 +76,6 @@ public class ServiceCenterDao {
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new DaoException("update service offer failed", e);
-        }
-    }
-
-    public boolean updateOffer(ServiceOffer o) {
-        String sql = "UPDATE service_offers SET title = ?, description = ?, price = ? WHERE id = ?";
-        try (Connection c = ConnectionFactory.get();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, o.getTitle());
-            ps.setString(2, o.getDescription());
-            ps.setDouble(3, o.getPrice());
-            ps.setInt(4, o.getId());
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            throw new DaoException("update service offer failed", e);
-        }
-    }
-
-    public boolean deleteOffer(int offerId) {
-        String sql = "DELETE FROM service_offers WHERE id = ?";
-        try (Connection c = ConnectionFactory.get();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, offerId);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            throw new DaoException("delete service offer failed", e);
         }
     }
 
@@ -212,90 +183,5 @@ public class ServiceCenterDao {
         } catch (SQLException e) {
             throw new DaoException("query service requests failed", e);
         }
-    }
-
-    public double totalRevenueSince(int centerId, java.time.LocalDateTime since) {
-        String sql = "SELECT COALESCE(SUM(o.price), 0) FROM service_requests r " +
-                     "JOIN service_offers o ON o.id = r.offer_id " +
-                     "WHERE o.center_id = ? AND r.status = 'COMPLETED' AND r.created_at >= ?";
-        try (Connection c = ConnectionFactory.get();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, centerId);
-            ps.setString(2, since.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? rs.getDouble(1) : 0;
-            }
-        } catch (SQLException e) {
-            throw new DaoException("totalRevenueSince failed", e);
-        }
-    }
-
-    public int countActiveBookings(int centerId) {
-        String sql = "SELECT COUNT(*) FROM service_requests r " +
-                     "JOIN service_offers o ON o.id = r.offer_id " +
-                     "WHERE o.center_id = ? AND r.status IN ('REQUESTED', 'ACCEPTED')";
-        try (Connection c = ConnectionFactory.get();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, centerId);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? rs.getInt(1) : 0;
-            }
-        } catch (SQLException e) {
-            throw new DaoException("countActiveBookings failed", e);
-        }
-    }
-
-    public int countOffers(int centerId) {
-        String sql = "SELECT COUNT(*) FROM service_offers WHERE center_id = ?";
-        try (Connection c = ConnectionFactory.get();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, centerId);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? rs.getInt(1) : 0;
-            }
-        } catch (SQLException e) {
-            throw new DaoException("countOffers failed", e);
-        }
-    }
-
-    public java.util.Map<String, Double> dailyRevenue(int centerId, int days) {
-        String sql = "SELECT DATE(r.created_at) d, SUM(o.price) t FROM service_requests r " +
-                     "JOIN service_offers o ON o.id = r.offer_id " +
-                     "WHERE o.center_id = ? AND r.status = 'COMPLETED' " +
-                     "AND r.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) " +
-                     "GROUP BY d ORDER BY d";
-        java.util.Map<String, Double> out = new java.util.LinkedHashMap<>();
-        try (Connection c = ConnectionFactory.get();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, centerId);
-            ps.setInt(2, days);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) out.put(rs.getString("d"), rs.getDouble("t"));
-            }
-        } catch (SQLException e) {
-            throw new DaoException("dailyRevenue failed", e);
-        }
-        return out;
-    }
-
-    /** Top service centres ranked by number of completed bookings. */
-    public java.util.List<Object[]> topCentersByBookings(int limit) {
-        String sql = "SELECT u.full_name, COUNT(*) cnt " +
-                     "FROM service_requests r " +
-                     "JOIN service_offers o ON o.id = r.offer_id " +
-                     "JOIN users u ON u.id = o.center_id " +
-                     "WHERE r.status = 'COMPLETED' " +
-                     "GROUP BY o.center_id ORDER BY cnt DESC LIMIT ?";
-        java.util.List<Object[]> out = new ArrayList<>();
-        try (Connection c = ConnectionFactory.get();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, limit);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) out.add(new Object[]{rs.getString(1), rs.getInt(2)});
-            }
-        } catch (SQLException e) {
-            throw new DaoException("topCentersByBookings failed", e);
-        }
-        return out;
     }
 }

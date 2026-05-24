@@ -11,6 +11,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
@@ -22,11 +24,7 @@ import java.text.NumberFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * The customer-facing marketplace catalog: shows every LIVE listing as a
- * card with name, price, stock, trusted-supplier badge, and an Add to Cart
- * button. Includes a quick text filter + category filter on top.
- */
+
 public class CatalogController {
 
     private static final String ALL_CATEGORIES = "All categories";
@@ -53,18 +51,36 @@ public class CatalogController {
     }
 
     private void reload() {
-        all = AppContext.get().listingService.liveCatalog();
-        suppliersById = AppContext.get().supplierService.all().stream()
-                .collect(Collectors.toMap(Supplier::getId, s -> s, (a, b) -> a));
+        grid.getChildren().clear();
+        emptyLabel.setText("Loading marketplace...");
+        emptyLabel.setManaged(true); emptyLabel.setVisible(true);
 
-        List<String> categories = new ArrayList<>();
-        categories.add(ALL_CATEGORIES);
-        all.stream().map(Part::getCategory).filter(Objects::nonNull).filter(s -> !s.isBlank())
-                .distinct().sorted().forEach(categories::add);
-        categoryFilter.setItems(FXCollections.observableArrayList(categories));
-        categoryFilter.setValue(ALL_CATEGORIES);
+        new Thread(() -> {
+            try {
+                List<Part> liveParts = AppContext.get().listingService.liveCatalog();
+                Map<Integer, Supplier> sups = AppContext.get().supplierService.all().stream()
+                        .collect(Collectors.toMap(Supplier::getId, s -> s, (a, b) -> a));
 
-        render();
+                javafx.application.Platform.runLater(() -> {
+                    all = liveParts;
+                    suppliersById = sups;
+
+                    List<String> categories = new ArrayList<>();
+                    categories.add(ALL_CATEGORIES);
+                    all.stream().map(Part::getCategory).filter(Objects::nonNull).filter(s -> !s.isBlank())
+                            .distinct().sorted().forEach(categories::add);
+                    categoryFilter.setItems(FXCollections.observableArrayList(categories));
+                    categoryFilter.setValue(ALL_CATEGORIES);
+
+                    render();
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+                javafx.application.Platform.runLater(() -> {
+                    emptyLabel.setText("Failed to load catalog: " + e.getMessage());
+                });
+            }
+        }).start();
     }
 
     private void render() {
@@ -96,14 +112,29 @@ public class CatalogController {
         card.getStyleClass().addAll("card", "product-card");
         card.setMaxWidth(240); card.setMinWidth(240); card.setPrefWidth(240);
 
-        // Placeholder "image" -- a coloured rectangle with the SKU in it.
+        // Placeholder "image" components (used as fallback)
         Region thumb = new Region();
         thumb.setPrefSize(208, 110);
         thumb.setStyle(thumbStyleFor(p));
         Label sku = new Label(p.getSku() == null ? "" : p.getSku());
         sku.setStyle("-fx-text-fill: rgba(255,255,255,0.9); -fx-font-weight: bold; -fx-font-size: 14px;");
-        StackPane thumbBox = new StackPane(thumb, sku);
+
+        StackPane thumbBox = new StackPane();
         thumbBox.setPrefHeight(110);
+
+        if (p.getImageUrl() != null && !p.getImageUrl().isBlank()) {
+            try {
+                ImageView iv = new ImageView(new Image(p.getImageUrl(), true));
+                iv.setFitWidth(208); iv.setFitHeight(110);
+                iv.setPreserveRatio(true);
+                thumbBox.getChildren().add(iv);
+            } catch (Exception e) {
+                // fallback to colored thumb if image fails
+                thumbBox.getChildren().addAll(thumb, sku);
+            }
+        } else {
+            thumbBox.getChildren().addAll(thumb, sku);
+        }
 
         Label name = new Label(p.getName());
         name.setWrapText(true);

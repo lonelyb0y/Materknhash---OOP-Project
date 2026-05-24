@@ -9,11 +9,7 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
-/**
- * Public sign-up flow. Customers register and are immediately ACTIVE.
- * Sellers register and land in PENDING_APPROVAL; an admin must approve
- * them in the "Pending Sellers" screen before they can log in.
- */
+
 public class SignupController {
 
     @FXML private ComboBox<String> roleCombo;

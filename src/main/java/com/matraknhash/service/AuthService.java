@@ -7,13 +7,12 @@ import com.matraknhash.model.User;
 import com.matraknhash.util.Result;
 
 import java.util.Optional;
-
 public class AuthService {
 
     private final UserDao userDao;
 
     public AuthService(UserDao userDao) { this.userDao = userDao; }
-
+    
     public Result<User> login(String username, String password) {
         if (username == null || username.isBlank() || password == null || password.isEmpty())
             return Result.fail("Username and password are required.");
@@ -23,9 +22,9 @@ public class AuthService {
         User u = opt.get();
         if (!u.isActive()) return Result.fail("Account is inactive.");
 
-        // Pending seller signups can't log in until an admin reviews them.
+        
         if (u.getStatus() == User.Status.PENDING_APPROVAL)
-            return Result.fail("Your seller account is awaiting admin approval.");
+            return Result.fail("0Your seller account is awaiting admin approval.");
         if (u.getStatus() == User.Status.SUSPENDED)
             return Result.fail("Account suspended. Contact the administrator.");
 
@@ -34,11 +33,7 @@ public class AuthService {
         return Result.ok(u);
     }
 
-    /**
-     * Self-service signup. Only CUSTOMER and SELLER may register themselves.
-     * Customers are immediately ACTIVE; sellers land in PENDING_APPROVAL and
-     * need admin sign-off before they can log in or list anything.
-     */
+    
     public Result<User> signup(String username, String password, String fullName, Role role) {
         if (username == null || username.isBlank())   return Result.fail("Username is required.");
         if (password == null || password.length() < 4) return Result.fail("Password must be at least 4 characters.");
@@ -51,7 +46,6 @@ public class AuthService {
 
         String hash = BCrypt.withDefaults().hashToString(10, password.toCharArray());
         User u = User.from(0, username.trim(), hash, fullName.trim(), role, true);
-        // Anyone but customers needs admin review before they can log in.
         u.setStatus(role == Role.CUSTOMER ? User.Status.ACTIVE : User.Status.PENDING_APPROVAL);
         return Result.ok(userDao.insert(u));
     }

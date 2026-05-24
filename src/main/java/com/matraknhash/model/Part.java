@@ -20,6 +20,7 @@ public class Part {
     private int quantity;
     private int minQty;
     private Integer supplierId;
+    private String imageUrl;
     // --- marketplace fields (M1) ---
     private Integer sellerId;
     private ListingStatus listingStatus = ListingStatus.LIVE;
@@ -30,6 +31,7 @@ public class Part {
     public Part() {}
 
     public int getId() { return id; }
+    public String getImageUrl() { return imageUrl; }
     public String getSku() { return sku; }
     public String getName() { return name; }
     public String getCategory() { return category; }
@@ -47,6 +49,7 @@ public class Part {
     public Integer getAdminReviewerId() { return adminReviewerId; }
 
     public void setId(int id) { this.id = id; }
+    public void setImageUrl(String url) { this.imageUrl = url; }
     public void setSku(String sku) { this.sku = sku; }
     public void setName(String name) { this.name = name; }
     public void setCategory(String category) { this.category = category; }

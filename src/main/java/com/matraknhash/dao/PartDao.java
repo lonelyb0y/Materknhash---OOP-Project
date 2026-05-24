@@ -15,7 +15,7 @@ public class PartDao extends BaseDao<Part> {
     @Override protected String[] columns() {
         return new String[]{"sku","name","category","car_make","car_model",
                 "cost_price","sell_price","quantity","min_qty","supplier_id",
-                "seller_id","listing_status","listing_reason"};
+                "seller_id","listing_status","listing_reason","image_url"};
     }
 
     @Override protected Part extract(ResultSet rs) throws SQLException {
@@ -39,6 +39,7 @@ public class PartDao extends BaseDao<Part> {
             try { p.setListingStatus(Part.ListingStatus.valueOf(ls)); } catch (IllegalArgumentException ignore) {}
         }
         p.setListingReason(rs.getString("listing_reason"));
+        p.setImageUrl(rs.getString("image_url"));
         return p;
     }
 
@@ -58,11 +59,12 @@ public class PartDao extends BaseDao<Part> {
         else ps.setInt(11, p.getSellerId());
         ps.setString(12, (p.getListingStatus() == null ? Part.ListingStatus.LIVE : p.getListingStatus()).name());
         ps.setString(13, p.getListingReason());
+        ps.setString(14, p.getImageUrl());
     }
 
     @Override protected void bindUpdate(PreparedStatement ps, Part p) throws SQLException {
         bindInsert(ps, p);
-        ps.setInt(14, p.getId());
+        ps.setInt(15, p.getId());
     }
 
     public List<Part> findLive() {
@@ -126,21 +128,6 @@ public class PartDao extends BaseDao<Part> {
         return out;
     }
 
-    public List<Part> findLowStockForSeller(int sellerId) {
-        String sql = "SELECT * FROM parts WHERE quantity <= min_qty AND seller_id = ? ORDER BY quantity ASC";
-        List<Part> out = new ArrayList<>();
-        try (Connection c = conn();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setInt(1, sellerId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) out.add(extract(rs));
-            }
-        } catch (SQLException e) {
-            throw new DaoException("findLowStockForSeller failed", e);
-        }
-        return out;
-    }
-
     public List<Part> search(String term) {
         String sql = "SELECT * FROM parts WHERE sku LIKE ? OR name LIKE ? ORDER BY name";
         List<Part> out = new ArrayList<>();
@@ -168,16 +155,29 @@ public class PartDao extends BaseDao<Part> {
         }
     }
 
-    public int countBySeller(int sellerId) {
+    /** Atomically decrement stock. Returns true if stock was sufficient. */
+    public boolean decrementStock(int partId, int qty) {
+        String sql = "UPDATE parts SET quantity = quantity - ? WHERE id = ? AND quantity >= ?";
         try (Connection c = conn();
-             PreparedStatement ps = c.prepareStatement("SELECT COUNT(*) FROM parts WHERE seller_id = ?")) {
-            ps.setInt(1, sellerId);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next() ? rs.getInt(1) : 0;
-            }
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, qty);
+            ps.setInt(2, partId);
+            ps.setInt(3, qty);
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            throw new DaoException("countBySeller failed", e);
+            throw new DaoException("decrementStock failed", e);
         }
     }
 
+    public void incrementStock(int partId, int qty) {
+        try (Connection c = conn();
+             PreparedStatement ps = c.prepareStatement(
+                "UPDATE parts SET quantity = quantity + ? WHERE id = ?")) {
+            ps.setInt(1, qty);
+            ps.setInt(2, partId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new DaoException("incrementStock failed", e);
+        }
+    }
 }

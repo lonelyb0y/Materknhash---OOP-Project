@@ -7,12 +7,7 @@ import com.matraknhash.util.EventBus;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * Background thread that polls the database every {@code intervalSeconds}
- * seconds and publishes a LowStockEvent if any parts are at/below their
- * minimum quantity. Designed to be started once at application launch
- * and stopped at shutdown.
- */
+
 public class StockMonitorTask implements Runnable {
 
     private final PartDao partDao;

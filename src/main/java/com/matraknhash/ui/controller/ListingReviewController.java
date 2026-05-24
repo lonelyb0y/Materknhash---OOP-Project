@@ -17,12 +17,7 @@ import javafx.scene.layout.HBox;
 import java.text.NumberFormat;
 import java.util.*;
 
-/**
- * Single screen that handles both halves of the listing approval pipeline:
- *  - Employees see PENDING_EMPLOYEE listings; approving forwards them to admin.
- *  - Admins see PENDING_ADMIN listings; approving makes them LIVE on the catalog.
- * The role-aware mode is picked at initialize() time from {@link Session#current()}.
- */
+
 public class ListingReviewController {
 
     private enum Mode { EMPLOYEE, ADMIN }

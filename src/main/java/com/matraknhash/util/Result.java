@@ -1,9 +1,6 @@
 package com.matraknhash.util;
 
-/**
- * Generic Result wrapper. Used as a lightweight Either&lt;Error,Value&gt;
- * to avoid sprinkling try/catch through controllers.
- */
+
 public final class Result<T> {
     private final T value;
     private final String error;

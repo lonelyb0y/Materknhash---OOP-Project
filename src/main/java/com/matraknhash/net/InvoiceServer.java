@@ -11,12 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * TCP server accepting serialized {@link InvoiceMessage} payloads from
- * cashier clients. Persists the sale via {@link SaleService} and replies
- * with ACK / ERROR. Runs on its own thread; clients are handled by a
- * cached thread-pool.
- */
+
 public class InvoiceServer {
 
     private final int port;
