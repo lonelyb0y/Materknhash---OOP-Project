@@ -32,6 +32,8 @@
         </HBox>
         <Label text="Source supplier (★ trusted skips review)"/>
         <ComboBox fx:id="supplierCombo" prefWidth="320"/>
+        <Label text="Image URL"/>
+        <TextField fx:id="imgUrlField" promptText="https://example.com/image.png"/>
 
         <Label fx:id="formError" styleClass="error-label" managed="false" visible="false" wrapText="true"/>
         <Label fx:id="formInfo"  styleClass="muted"       managed="false" visible="false" wrapText="true"/>

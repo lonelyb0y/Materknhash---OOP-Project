@@ -17,7 +17,7 @@ import java.util.Locale;
 
 public class MyListingsController {
 
-    @FXML private TextField skuField, nameField, categoryField, makeField, modelField, priceField, qtyField;
+    @FXML private TextField skuField, nameField, categoryField, makeField, modelField, priceField, qtyField, imgUrlField;
     @FXML private ComboBox<Supplier> supplierCombo;
     @FXML private Label formError, formInfo;
 
@@ -70,7 +70,7 @@ public class MyListingsController {
     private void onClear() {
         skuField.clear(); nameField.clear(); categoryField.clear();
         makeField.clear(); modelField.clear();
-        priceField.clear(); qtyField.clear();
+        priceField.clear(); qtyField.clear(); imgUrlField.clear();
         supplierCombo.setValue(null);
         hideMessages();
     }
@@ -95,6 +95,7 @@ public class MyListingsController {
             p.setSellPrice(price);
             p.setQuantity(qty);
             p.setMinQty(0);
+            p.setImageUrl(imgUrlField.getText() == null || imgUrlField.getText().isBlank() ? null : imgUrlField.getText().trim());
             Supplier sup = supplierCombo.getValue();
             if (sup != null) p.setSupplierId(sup.getId());
 
