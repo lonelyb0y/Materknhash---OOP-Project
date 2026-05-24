@@ -31,12 +31,11 @@ public class PartsController {
 
     private final ObservableList<Part> items = FXCollections.observableArrayList();
     private Part editing;
+    private List<Part> allParts = List.of();
 
     @FXML
     public void initialize() {
-        // Suppliers combo
-        List<Supplier> sups = AppContext.get().supplierService.all();
-        supplierCombo.setItems(FXCollections.observableArrayList(sups));
+        table.setPlaceholder(new Label("Loading..."));
 
         colId.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getId()));
         colSku.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getSku()));
@@ -47,10 +46,36 @@ public class PartsController {
         addActionsColumn();
 
         table.setItems(items);
-        reload();
+        
+        // Load initial data asynchronously
+        new Thread(() -> {
+            try {
+                List<Supplier> sups = AppContext.get().supplierService.all();
+                List<Part> list = AppContext.get().partService.all();
+                javafx.application.Platform.runLater(() -> {
+                    supplierCombo.setItems(FXCollections.observableArrayList(sups));
+                    allParts = list;
+                    items.setAll(list);
+                    table.setPlaceholder(new Label("No content in table"));
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+                javafx.application.Platform.runLater(() -> table.setPlaceholder(new Label("Error loading data")));
+            }
+        }).start();
 
-        searchField.textProperty().addListener((o, ov, nv) ->
-                items.setAll(AppContext.get().partService.search(nv)));
+        searchField.textProperty().addListener((o, ov, nv) -> {
+            if (nv == null || nv.isBlank()) {
+                items.setAll(allParts);
+            } else {
+                String term = nv.trim().toLowerCase();
+                List<Part> filtered = allParts.stream()
+                        .filter(p -> (p.getSku() != null && p.getSku().toLowerCase().contains(term))
+                                  || (p.getName() != null && p.getName().toLowerCase().contains(term)))
+                        .toList();
+                items.setAll(filtered);
+            }
+        });
     }
 
     private void addActionsColumn() {
@@ -71,7 +96,30 @@ public class PartsController {
         });
     }
 
-    private void reload() { items.setAll(AppContext.get().partService.all()); }
+    private void reload() {
+        new Thread(() -> {
+            try {
+                List<Part> list = AppContext.get().partService.all();
+                javafx.application.Platform.runLater(() -> {
+                    allParts = list;
+                    // Apply current search term if present
+                    String nv = searchField.getText();
+                    if (nv == null || nv.isBlank()) {
+                        items.setAll(allParts);
+                    } else {
+                        String term = nv.trim().toLowerCase();
+                        List<Part> filtered = allParts.stream()
+                                .filter(p -> (p.getSku() != null && p.getSku().toLowerCase().contains(term))
+                                          || (p.getName() != null && p.getName().toLowerCase().contains(term)))
+                                .toList();
+                        items.setAll(filtered);
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
 
     private void loadIntoForm(Part p) {
         editing = p;
