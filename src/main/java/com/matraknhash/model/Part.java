@@ -4,7 +4,7 @@ public class Part {
 
     /**
      * A listing's lifecycle on the marketplace. Seeded parts are LIVE.
-     * A new seller listing flows DRAFT → PENDING_EMPLOYEE → PENDING_ADMIN → LIVE.
+     * A new seller listing flows DRAFT → PENDING_EMPLOYEE → LIVE (single-step employee approval).
      * REJECTED or HIDDEN listings don't appear in the customer catalog.
      */
     public enum ListingStatus { DRAFT, PENDING_EMPLOYEE, PENDING_ADMIN, LIVE, REJECTED, HIDDEN }

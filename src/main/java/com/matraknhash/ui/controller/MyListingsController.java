@@ -97,7 +97,7 @@ public class MyListingsController {
             double cost  = Double.parseDouble(costField.getText().trim());
             double price = Double.parseDouble(priceField.getText().trim());
             int qty      = Integer.parseInt(qtyField.getText().trim());
-            if (cost <= 0 || price <= 0 || qty < 0) throw new IllegalArgumentException("Cost > 0, Price > 0 and stock >= 0.");
+            if (cost <= 0 || price <= 0 || qty < 1) throw new IllegalArgumentException("Cost > 0, Price > 0 and stock ≥ 1.");
 
             Part p = new Part();
             p.setSku(skuField.getText().trim());

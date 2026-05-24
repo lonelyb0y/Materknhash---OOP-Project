@@ -159,12 +159,25 @@ public final class DatabaseBootstrap {
     private static void cleanupDefaultSeedData(Connection c) {
         System.out.println("[DatabaseBootstrap] Wiping default placeholder seed data...");
         try (Statement st = c.createStatement()) {
-            // Delete all references and parts that were seeded with IDs <= 30
-            st.executeUpdate("DELETE FROM sale_items WHERE part_id <= 30");
-            st.executeUpdate("DELETE FROM purchase_items WHERE part_id <= 30");
-            st.executeUpdate("DELETE FROM parts WHERE id <= 30");
-            st.executeUpdate("DELETE FROM sales WHERE id <= 30");
-            st.executeUpdate("DELETE FROM purchases WHERE id <= 30");
+            // Safe condition targeting only the default seeded parts by SKU format, default seller (id=3), and ID <= 30.
+            // This prevents deleting newly registered merchant parts if they happen to have IDs <= 30 on clean databases.
+            String partCondition = "id <= 30 AND seller_id = 3 AND (sku LIKE 'SP-%' OR sku LIKE 'OF-%' OR sku LIKE 'AF-%' OR sku LIKE 'CF-%' OR sku LIKE 'FF-%' OR sku LIKE 'BR-%' OR sku LIKE 'BT-%' OR sku LIKE 'TM-%' OR sku LIKE 'WP-%' OR sku LIKE 'TH-%' OR sku LIKE 'SL-%' OR sku LIKE 'SH-%' OR sku LIKE 'CL-%' OR sku LIKE 'TR-%')";
+            
+            // Delete referencing items first
+            st.executeUpdate("DELETE FROM sale_items WHERE part_id <= 30 AND part_id IN (SELECT id FROM parts WHERE " + partCondition + ")");
+            st.executeUpdate("DELETE FROM purchase_items WHERE part_id <= 30 AND part_id IN (SELECT id FROM parts WHERE " + partCondition + ")");
+            st.executeUpdate("DELETE FROM parts WHERE " + partCondition);
+            
+            // Wiping seeded sales/purchases history with IDs <= 30
+            st.executeUpdate("DELETE FROM sales WHERE id <= 30 AND seller_id = 3");
+            st.executeUpdate("DELETE FROM purchases WHERE id <= 30 AND supplier_id <= 10");
+            
+            // Auto-migrate any listings stuck in PENDING_ADMIN from the old workflow to LIVE
+            int migrated = st.executeUpdate("UPDATE parts SET listing_status = 'LIVE' WHERE listing_status = 'PENDING_ADMIN'");
+            if (migrated > 0) {
+                System.out.println("[DatabaseBootstrap] Auto-migrated " + migrated + " stuck PENDING_ADMIN listings to LIVE!");
+            }
+            
             System.out.println("[DatabaseBootstrap] Default placeholder seed data successfully removed!");
         } catch (SQLException e) {
             System.err.println("[DatabaseBootstrap] Error cleaning up placeholder seed data: " + e.getMessage());

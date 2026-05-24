@@ -41,7 +41,7 @@ public class ListingReviewController {
         title.setText(mode == Mode.ADMIN ? "Admin: Listings Approval" : "Listings Review");
         subtitle.setText(mode == Mode.ADMIN
                 ? "Listings already cleared by an employee. Approving makes them LIVE on the customer catalog."
-                : "Fresh listings submitted by sellers. Approving forwards them to admin for the final OK.");
+                : "Fresh listings submitted by sellers. Approving makes them LIVE on the marketplace instantly.");
 
         colId.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getId()));
         colSku.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getSku()));
@@ -108,8 +108,7 @@ public class ListingReviewController {
                 ? AppContext.get().listingService.adminApprove(p.getId(), me.getId())
                 : AppContext.get().listingService.employeeApprove(p.getId(), me.getId());
         status.setText(ok
-                ? "Approved \"" + p.getName() + "\""
-                  + (mode == Mode.ADMIN ? " — now LIVE on the marketplace." : " — forwarded to admin.")
+                ? "Approved \"" + p.getName() + "\" — now LIVE on the marketplace!"
                 : "Could not approve — state may have changed.");
         refresh();
     }
